@@ -4,6 +4,8 @@ import { serializerCompiler, validatorCompiler, ZodTypeProvider } from 'fastify-
 import { env } from './env'
 import prismaPlugin from './plugins/prisma'
 import errorsPlugin from './plugins/errors'
+import authPlugin from './plugins/auth'
+import authRoutes from './modules/auth/auth.routes'
 
 export async function buildApp() {
   const app = Fastify({
@@ -16,6 +18,9 @@ export async function buildApp() {
   await app.register(errorsPlugin)
   await app.register(cors, { origin: env.CORS_ORIGIN })
   await app.register(prismaPlugin)
+  await app.register(authPlugin)
+
+  await app.register(authRoutes, { prefix: '/auth' })
 
   app.get('/health', async () => ({ status: 'ok' }))
 

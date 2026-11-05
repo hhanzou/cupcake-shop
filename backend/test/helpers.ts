@@ -17,3 +17,35 @@ export async function resetDb() {
   const list = tables.map((t) => `"public"."${t.tablename}"`).join(', ')
   await client.$executeRawUnsafe(`TRUNCATE TABLE ${list} RESTART IDENTITY CASCADE`)
 }
+
+import bcrypt from 'bcryptjs'
+import { Role } from '@prisma/client'
+import type { FastifyInstance } from 'fastify'
+
+let counter = 0
+
+export async function createUser(
+  app: FastifyInstance,
+  overrides: { email?: string; password?: string; role?: Role; name?: string } = {},
+) {
+  counter += 1
+  const password = overrides.password ?? 'senha12345'
+  const user = await db().user.create({
+    data: {
+      name: overrides.name ?? `Usuário ${counter}`,
+      email: overrides.email ?? `user${counter}-${Date.now()}@teste.com`,
+      passwordHash: await bcrypt.hash(password, 4),
+      role: overrides.role ?? 'USER',
+    },
+  })
+  const token = app.jwt.sign({ sub: user.id, role: user.role })
+  return { user, token, password }
+}
+
+export function createAdmin(app: FastifyInstance) {
+  return createUser(app, { role: 'ADMIN' })
+}
+
+export function authHeader(token: string) {
+  return { authorization: `Bearer ${token}` }
+}

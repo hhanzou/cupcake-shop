@@ -62,12 +62,8 @@ export function StepPayment({
         </dl>
       </section>
 
-      <p className="rounded-2xl bg-lilac px-4 py-3 text-sm font-semibold" role="note">
-        Pagamento simulado: nenhum dado de cartão é pedido e nenhuma cobrança real é feita.
-      </p>
-
       <Button type="button" size="lg" onClick={onPay} disabled={processing || !preview}>
-        {processing ? "Processando pagamento..." : "Simular pagamento"}
+        {processing ? "Processando pagamento..." : "Pagar"}
       </Button>
     </div>
   )

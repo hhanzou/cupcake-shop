@@ -41,9 +41,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 py-6">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-secondary pb-4">
-        <div className="flex items-center gap-6">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
           <span className="font-heading text-2xl font-semibold">Administração</span>
-          <nav aria-label="Administração" className="flex gap-1">
+          <nav aria-label="Administração" className="flex flex-wrap gap-1">
             {LINKS.map((link) => {
               const active = pathname.startsWith(link.href)
               return (

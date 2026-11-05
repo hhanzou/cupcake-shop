@@ -8,11 +8,11 @@ export function SiteHeader() {
     <header>
       <div className="awning h-5" aria-hidden="true" />
       <div className="awning-edge" aria-hidden="true" />
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3">
         <Link href="/" className="font-heading text-2xl font-semibold">
           {STORE.name}
         </Link>
-        <nav className="flex items-center gap-4 text-sm font-medium">
+        <nav className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-medium">
           <Link href="/">Catálogo</Link>
           <CartLink />
           <UserMenu />

@@ -54,7 +54,7 @@ Sem terminal interativo, gere o SQL com `prisma migrate diff` (veja `docs/plano-
 | --- | --- | --- |
 | `DATABASE_URL` | Sim | URL de conexão do Postgres |
 | `JWT_SECRET` | Sim | Segredo para assinar os tokens (mínimo de 32 caracteres) |
-| `CORS_ORIGIN` | Sim | Origem do front-end liberada no CORS (ex.: `http://localhost:5173`) |
+| `CORS_ORIGIN` | Sim | Origem do front-end liberada no CORS (ex.: `http://localhost:3001`) |
 | `PORT` | Não | Porta da API (padrão `3000`) |
 | `HOST` | Não | Endereço de escuta (padrão `0.0.0.0`) |
 | `NODE_ENV` | Não | `development`, `test` ou `production` (padrão `development`) |

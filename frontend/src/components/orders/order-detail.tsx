@@ -96,7 +96,7 @@ export function OrderDetail({ id }: { id: string }) {
               <br />
               {order.address.city} - {order.address.state}
               <br />
-              CEP {order.address.zipCode.replace(/^(d{5})(d{3})$/, "$1-$2")}
+              CEP {order.address.zipCode.replace(/^(\d{5})(\d{3})$/, "$1-$2")}
             </address>
           ) : (
             <address className="text-sm not-italic">

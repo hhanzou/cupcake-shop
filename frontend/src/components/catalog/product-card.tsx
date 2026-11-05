@@ -14,7 +14,7 @@ export function ProductCard({ product }: { product: Product }) {
       <Link href={`/cupcakes/${product.id}`} className="flex flex-1 flex-col outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
         <div className="relative aspect-[4/3] w-full">
           <Image
-            src={imageUrl(product.imageUrl, product.updatedAt)}
+            src={imageUrl(product.imageUrl)}
             alt={product.name}
             fill
             unoptimized

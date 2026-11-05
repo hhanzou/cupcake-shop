@@ -51,7 +51,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
       <div className="grid gap-8 md:grid-cols-2">
         <div className="relative aspect-[4/3] overflow-hidden rounded-3xl border border-secondary shadow-soft">
           <Image
-            src={imageUrl(product.imageUrl, product.updatedAt)}
+            src={imageUrl(product.imageUrl)}
             alt={product.name}
             fill
             unoptimized

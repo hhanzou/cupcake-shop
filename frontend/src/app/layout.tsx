@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { Fredoka, Nunito } from "next/font/google"
+import { SessionBootstrap } from "@/components/auth/session-bootstrap"
 import { Toaster } from "@/components/ui/sonner"
 import "./globals.css"
 
@@ -15,6 +16,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="pt-BR" className={`${fredoka.variable} ${nunito.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
+        <SessionBootstrap />
         {children}
         <Toaster />
       </body>

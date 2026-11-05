@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { ShoppingBasket } from "lucide-react"
+import { UserMenu } from "@/components/layout/user-menu"
 import { STORE } from "@/lib/store"
 
 export function SiteHeader() {
@@ -17,6 +18,7 @@ export function SiteHeader() {
             <ShoppingBasket className="size-5" aria-hidden="true" />
             Carrinho
           </Link>
+          <UserMenu />
         </nav>
       </div>
     </header>

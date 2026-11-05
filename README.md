@@ -1,10 +1,10 @@
 # CupcakeShop
 
-Backend da loja de cupcakes: API REST em Node 22, Fastify 5, Prisma 6 e PostgreSQL 17, tudo rodando em Docker.
+Loja de cupcakes completa: API REST em Node 22, Fastify 5, Prisma 6 e PostgreSQL 17 (em Docker, pasta `backend/`) e front-end em Next.js, TypeScript, Tailwind CSS e shadcn/ui (pasta `frontend/`).
 
 A documentação de projeto está em [docs/plano-backend.md](docs/plano-backend.md) (regras de negócio, modelo de dados e endpoints).
 
-## Como rodar
+## Como rodar o backend
 
 Pré-requisito: Docker com Docker Compose.
 
@@ -47,6 +47,36 @@ docker compose exec -T api npm start       # sobe a API a partir de dist/
 Em um terminal interativo: `docker compose exec api npx prisma migrate dev --name <nome>`.
 
 Sem terminal interativo, gere o SQL com `prisma migrate diff` (veja `docs/plano-execucao.md`) e aplique com `prisma migrate deploy`.
+
+## Como rodar o frontend
+
+Pré-requisitos: Node 22 e a API rodando (veja acima). O front roda fora do Docker, na porta 3001.
+
+```bash
+cd frontend
+cp .env.example .env.local   # NEXT_PUBLIC_API_URL=http://localhost:3000
+npm install
+npm run dev                  # http://localhost:3001
+```
+
+| Variável | Descrição |
+| --- | --- |
+| `NEXT_PUBLIC_API_URL` | URL da API (padrão de desenvolvimento: `http://localhost:3000`) |
+
+A origem `http://localhost:3001` precisa estar em `CORS_ORIGIN` na API (já é o padrão do `docker-compose.yml`).
+
+Para entrar como admin, use `admin@cupcakeshop.local` / `admin12345` (criado pelo seed) e abra `/admin`.
+
+### Testes e qualidade do frontend
+
+```bash
+npm test             # vitest: datas, dinheiro, carrinho e redirecionamento
+npm run lint
+npx tsc --noEmit
+npm run build
+```
+
+O pagamento é uma simulação: nenhum dado de cartão é pedido.
 
 ## Variáveis de ambiente
 

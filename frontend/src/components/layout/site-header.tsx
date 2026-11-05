@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ShoppingBasket } from "lucide-react"
+import { CartLink } from "@/components/cart/cart-link"
 import { UserMenu } from "@/components/layout/user-menu"
 import { STORE } from "@/lib/store"
 
@@ -14,10 +14,7 @@ export function SiteHeader() {
         </Link>
         <nav className="flex items-center gap-4 text-sm font-medium">
           <Link href="/">Catálogo</Link>
-          <Link href="/carrinho" className="flex items-center gap-1">
-            <ShoppingBasket className="size-5" aria-hidden="true" />
-            Carrinho
-          </Link>
+          <CartLink />
           <UserMenu />
         </nav>
       </div>

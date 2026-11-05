@@ -3,6 +3,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
+import { AddToCartButton } from "@/components/cart/add-to-cart-button"
 import { Badge } from "@/components/ui/badge"
 import { ApiError } from "@/lib/api"
 import { imageUrl } from "@/lib/image-url"
@@ -76,7 +77,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           <p className="w-fit rounded-full bg-butter px-5 py-2 font-heading text-2xl font-semibold shadow-soft">
             {formatPrice(product.price)}
           </p>
-          {/* O botão de adicionar ao carrinho entra na Fase 5 */}
+          <AddToCartButton product={product} className="w-full sm:w-fit" />
         </div>
       </div>
     </div>

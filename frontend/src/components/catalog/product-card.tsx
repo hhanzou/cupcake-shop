@@ -1,6 +1,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
+import { AddToCartButton } from "@/components/cart/add-to-cart-button"
 import { imageUrl } from "@/lib/image-url"
 import { formatPrice } from "@/lib/money"
 import type { Product } from "@/lib/types"
@@ -38,6 +39,9 @@ export function ProductCard({ product }: { product: Product }) {
           </ul>
         </div>
       </Link>
+      <div className="px-4 pb-4">
+        <AddToCartButton product={product} className="w-full" />
+      </div>
     </article>
   )
 }

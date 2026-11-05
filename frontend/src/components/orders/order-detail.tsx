@@ -1,9 +1,13 @@
 "use client"
 
+import Image from "next/image"
 import Link from "next/link"
-import { notFound, useSearchParams } from "next/navigation"
+import { notFound, useRouter, useSearchParams } from "next/navigation"
 import useSWR from "swr"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Plus, RefreshCw } from "lucide-react"
+import { addItemsToCart } from "@/components/orders/reorder"
+import { useCatalogMap } from "@/hooks/use-catalog-map"
+import { imageUrl } from "@/lib/image-url"
 import { OrderTimeline } from "@/components/orders/order-timeline"
 import { OrderStatusBadge } from "@/components/orders/order-status-badge"
 import { Confetti } from "@/components/illustrations/confetti"
@@ -20,6 +24,8 @@ import { STORE } from "@/lib/store"
 export function OrderDetail({ id }: { id: string }) {
   const justCreated = useSearchParams().get("novo") === "1"
   const { ready } = useRequireAuth()
+  const router = useRouter()
+  const { map: catalog, ready: catalogReady } = useCatalogMap()
   const { data, error, isLoading, mutate } = useSWR(ready ? ["order", id] : null, () => getOrder(id), {
     revalidateOnFocus: true,
     shouldRetryOnError: false,
@@ -72,20 +78,51 @@ export function OrderDetail({ id }: { id: string }) {
             Itens
           </h2>
           <ul className="divide-y divide-secondary">
-            {order.items.map((item) => (
-              <li key={item.productId} className="flex items-center justify-between gap-3 py-2">
-                <span>
-                  {item.quantity} × {item.name}
-                  <span className="block text-sm text-muted-foreground">{formatPrice(item.unitPrice)} cada</span>
-                </span>
-                <span className="font-semibold">{formatPrice(item.lineTotal)}</span>
-              </li>
-            ))}
+            {order.items.map((item) => {
+              const product = catalog.get(item.productId)
+              return (
+                <li key={item.productId} className="flex items-center gap-3 py-3">
+                  {product ? (
+                    <Link href={`/cupcakes/${product.id}`} className="relative size-16 shrink-0 overflow-hidden rounded-2xl" aria-label={`Ver ${item.name}`}>
+                      <Image src={imageUrl(product.imageUrl)} alt="" fill unoptimized sizes="64px" className="object-cover" />
+                    </Link>
+                  ) : (
+                    <span className="relative size-16 shrink-0 overflow-hidden rounded-2xl opacity-60 grayscale">
+                      <Image src={imageUrl(null)} alt="" fill unoptimized sizes="64px" className="object-cover" />
+                    </span>
+                  )}
+                  <span className="flex-1">
+                    {item.quantity} × {item.name}
+                    <span className="block text-sm text-muted-foreground">{formatPrice(item.unitPrice)} cada</span>
+                    {catalogReady && !product && <span className="block text-sm font-semibold text-destructive">Não está mais à venda</span>}
+                  </span>
+                  <div className="flex flex-col items-end gap-1">
+                    <span className="font-semibold">{formatPrice(item.lineTotal)}</span>
+                    {product && (
+                      <Button variant="ghost" size="xs" onClick={() => addItemsToCart([item], catalog)} aria-label={`Adicionar ${item.name} ao carrinho`}>
+                        <Plus aria-hidden="true" />
+                        Adicionar
+                      </Button>
+                    )}
+                  </div>
+                </li>
+              )
+            })}
           </ul>
           <p className="mt-3 flex items-baseline justify-between border-t border-secondary pt-3">
             <span>Total</span>
             <span className="font-heading text-2xl font-semibold">{formatPrice(order.total)}</span>
           </p>
+          <Button
+            className="mt-4 w-full"
+            disabled={!catalogReady}
+            onClick={() => {
+              if (addItemsToCart(order.items, catalog) > 0) router.push("/carrinho")
+            }}
+          >
+            <RefreshCw aria-hidden="true" />
+            Pedir novamente
+          </Button>
         </section>
 
         <section aria-labelledby="entrega" className="h-fit rounded-3xl border border-secondary bg-card p-5 shadow-soft">

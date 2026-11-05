@@ -214,7 +214,7 @@ export function ProductForm({ product }: { product?: Product }) {
         <div className="flex flex-col gap-2">
           <Label htmlFor="product-image">Imagem {editing ? "(deixe em branco para manter a atual)" : "(opcional)"}</Label>
           {currentImage && (
-            <div className="relative aspect-[4/3] w-full max-w-xs overflow-hidden rounded-2xl border border-secondary">
+            <div className="relative aspect-[9/10] w-full max-w-xs overflow-hidden rounded-2xl border border-secondary">
               <Image src={currentImage} alt={preview ? "Pré-visualização da nova imagem" : `Imagem atual de ${product?.name}`} fill unoptimized sizes="320px" className="object-cover" />
             </div>
           )}

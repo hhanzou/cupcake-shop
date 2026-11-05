@@ -49,14 +49,14 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
       </Link>
 
       <div className="grid gap-8 md:grid-cols-2">
-        <div className="relative aspect-[4/3] overflow-hidden rounded-3xl border border-secondary shadow-soft">
+        <div className="relative mx-auto aspect-[9/10] w-full max-w-md overflow-hidden rounded-3xl border border-secondary shadow-soft">
           <Image
             src={imageUrl(product.imageUrl)}
             alt={product.name}
             fill
             unoptimized
             priority
-            sizes="(min-width: 768px) 50vw, 100vw"
+            sizes="(min-width: 768px) 40vw, 100vw"
             className="object-cover"
           />
         </div>

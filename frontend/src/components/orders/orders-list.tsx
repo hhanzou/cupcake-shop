@@ -1,8 +1,13 @@
 "use client"
 
 import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { RefreshCw } from "lucide-react"
 import useSWR from "swr"
 import { CupcakeIllustration } from "@/components/illustrations/cupcake"
+import { OrderThumbs } from "@/components/orders/order-thumbs"
+import { addItemsToCart } from "@/components/orders/reorder"
+import { useCatalogMap } from "@/hooks/use-catalog-map"
 import { OrderStatusBadge } from "@/components/orders/order-status-badge"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -15,6 +20,8 @@ import { listOrders } from "@/lib/services/orders"
 
 export function OrdersList() {
   const { ready } = useRequireAuth()
+  const router = useRouter()
+  const { map: catalog, ready: catalogReady } = useCatalogMap()
   const { data, error, isLoading, mutate } = useSWR(ready ? "orders" : null, listOrders, {
     revalidateOnFocus: false,
   })
@@ -57,21 +64,39 @@ export function OrdersList() {
     <ul className="flex flex-col gap-3">
       {data.data.map((order, i) => (
         <li key={order.id} className="stagger" style={{ ["--i" as string]: i }}>
-          <Link
-            href={`/pedidos/${order.id}`}
-            className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-secondary bg-card p-4 shadow-soft outline-none transition-transform hover:-translate-y-0.5 focus-visible:ring-3 focus-visible:ring-ring/50"
-          >
-            <div className="flex flex-col gap-1">
-              <span className="text-sm text-muted-foreground">Pedido de {formatInstantDate(order.createdAt)}</span>
-              <span className="font-semibold">
-                {FULFILLMENT_LABEL[order.fulfillmentType]} para {formatDate(order.scheduledDate)}
-              </span>
+          <div className="overflow-hidden rounded-3xl border border-secondary bg-card shadow-soft transition-transform hover:-translate-y-0.5">
+            <Link
+              href={`/pedidos/${order.id}`}
+              className="flex flex-wrap items-center justify-between gap-3 p-4 outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+            >
+              <div className="flex items-center gap-4">
+                <OrderThumbs items={order.items} catalog={catalog} />
+                <div className="flex flex-col gap-1">
+                  <span className="text-sm text-muted-foreground">Pedido de {formatInstantDate(order.createdAt)}</span>
+                  <span className="font-semibold">
+                    {FULFILLMENT_LABEL[order.fulfillmentType]} para {formatDate(order.scheduledDate)}
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <OrderStatusBadge status={order.status} />
+                <span className="font-heading text-lg font-semibold">{formatPrice(order.total)}</span>
+              </div>
+            </Link>
+            <div className="flex justify-end border-t border-secondary bg-secondary/30 px-4 py-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                disabled={!catalogReady}
+                onClick={() => {
+                  if (addItemsToCart(order.items, catalog) > 0) router.push("/carrinho")
+                }}
+              >
+                <RefreshCw aria-hidden="true" />
+                Pedir novamente
+              </Button>
             </div>
-            <div className="flex items-center gap-3">
-              <OrderStatusBadge status={order.status} />
-              <span className="font-heading text-lg font-semibold">{formatPrice(order.total)}</span>
-            </div>
-          </Link>
+          </div>
         </li>
       ))}
     </ul>

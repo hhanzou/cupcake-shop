@@ -1,5 +1,7 @@
 import Fastify from 'fastify'
 import cors from '@fastify/cors'
+import multipart from '@fastify/multipart'
+import { MAX_IMAGE_BYTES } from './shared/image'
 import { serializerCompiler, validatorCompiler, ZodTypeProvider } from 'fastify-type-provider-zod'
 import { env } from './env'
 import prismaPlugin from './plugins/prisma'
@@ -19,6 +21,7 @@ export async function buildApp() {
 
   await app.register(errorsPlugin)
   await app.register(cors, { origin: env.CORS_ORIGIN })
+  await app.register(multipart, { limits: { fileSize: MAX_IMAGE_BYTES, files: 1 } })
   await app.register(prismaPlugin)
   await app.register(authPlugin)
 

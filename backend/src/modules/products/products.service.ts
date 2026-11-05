@@ -135,3 +135,28 @@ export async function deactivateProduct(prisma: PrismaClient, id: string) {
   })
   if (result.count === 0) throw notFound()
 }
+
+export async function saveProductImage(
+  prisma: PrismaClient,
+  id: string,
+  buffer: Uint8Array,
+  mimeType: string,
+) {
+  await findActiveProduct(prisma, id)
+  const data = new Uint8Array(buffer)
+  await prisma.productImage.upsert({
+    where: { productId: id },
+    create: { productId: id, data, mimeType },
+    update: { data, mimeType },
+  })
+  return getProduct(prisma, id)
+}
+
+export async function loadProductImage(prisma: PrismaClient, id: string) {
+  const image = await prisma.productImage.findFirst({
+    where: { productId: id, product: { active: true } },
+    select: { data: true, mimeType: true },
+  })
+  if (!image) throw new AppError(404, 'IMAGE_NOT_FOUND', 'Imagem não encontrada')
+  return image
+}

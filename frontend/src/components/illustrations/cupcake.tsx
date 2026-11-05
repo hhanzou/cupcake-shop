@@ -8,8 +8,9 @@ export function CupcakeIllustration({
   return (
     <svg
       viewBox="0 0 120 120"
-      role="img"
-      aria-label={title}
+      role={title ? "img" : undefined}
+      aria-label={title || undefined}
+      aria-hidden={title ? undefined : true}
       className={className}
       xmlns="http://www.w3.org/2000/svg"
     >

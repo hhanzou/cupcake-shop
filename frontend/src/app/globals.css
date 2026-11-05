@@ -148,6 +148,58 @@
   animation: hop 0.5s ease-out;
 }
 
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-10px) rotate(2deg); }
+}
+@keyframes pop {
+  0% { opacity: 0; transform: scale(0.9); }
+  60% { transform: scale(1.03); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgb(255 143 184 / 0.7); }
+  100% { box-shadow: 0 0 0 12px rgb(255 143 184 / 0); }
+}
+@keyframes sprinkle {
+  0% { opacity: 0; transform: translateY(-10px) rotate(0); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(70px) rotate(var(--rot, 180deg)); }
+}
+@keyframes twinkle {
+  0%, 100% { opacity: 0.35; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-6deg); }
+  75% { transform: rotate(6deg); }
+}
+
+.animate-fade-up { animation: fade-up 0.5s ease-out both; }
+.animate-float { animation: float 5s ease-in-out infinite; }
+.animate-pop { animation: pop 0.45s ease-out both; }
+.animate-pulse-ring { animation: pulse-ring 1.6s ease-out infinite; }
+.animate-sprinkle { animation: sprinkle 1.8s ease-in 2 both; }
+.animate-twinkle { animation: twinkle 2.6s ease-in-out infinite; }
+.hover-wiggle:hover > svg:first-child, .hover-wiggle:hover .wiggle-target { animation: wiggle 0.4s ease-in-out; }
+/* Entrada escalonada: defina --i em cada item */
+.stagger { animation: fade-up 0.5s ease-out both; animation-delay: calc(var(--i, 0) * 60ms); }
+
+/* Granulados soltos no hero */
+.hero-sprinkles {
+  background-image:
+    radial-gradient(circle at 8% 25%, var(--lilac) 0 4px, transparent 5px),
+    radial-gradient(circle at 22% 80%, var(--butter) 0 4px, transparent 5px),
+    radial-gradient(circle at 70% 18%, var(--mint) 0 4px, transparent 5px),
+    radial-gradient(circle at 92% 70%, #fff 0 4px, transparent 5px),
+    radial-gradient(circle at 55% 88%, var(--primary) 0 3px, transparent 4px);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.001ms !important;

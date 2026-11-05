@@ -66,13 +66,14 @@ export function CartView() {
         )}
 
         <ul className="flex flex-col gap-3">
-          {items.map((item) => {
+          {items.map((item, i) => {
             const line = priced.get(item.productId)
             const isUnavailable = unavailable.has(item.productId)
             return (
               <li
                 key={item.productId}
-                className="flex gap-4 rounded-3xl border border-secondary bg-card p-3 shadow-soft"
+                className="stagger flex gap-4 rounded-3xl border border-secondary bg-card p-3 shadow-soft"
+                style={{ ["--i" as string]: i }}
               >
                 <div className="relative size-24 shrink-0 overflow-hidden rounded-2xl">
                   <Image

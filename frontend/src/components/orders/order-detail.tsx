@@ -4,7 +4,9 @@ import Link from "next/link"
 import { notFound, useSearchParams } from "next/navigation"
 import useSWR from "swr"
 import { ArrowLeft } from "lucide-react"
+import { OrderTimeline } from "@/components/orders/order-timeline"
 import { OrderStatusBadge } from "@/components/orders/order-status-badge"
+import { Confetti } from "@/components/illustrations/confetti"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useRequireAuth } from "@/hooks/use-require-auth"
@@ -19,8 +21,10 @@ export function OrderDetail({ id }: { id: string }) {
   const justCreated = useSearchParams().get("novo") === "1"
   const { ready } = useRequireAuth()
   const { data, error, isLoading, mutate } = useSWR(ready ? ["order", id] : null, () => getOrder(id), {
-    revalidateOnFocus: false,
+    revalidateOnFocus: true,
     shouldRetryOnError: false,
+    // Acompanha o andamento: atualiza sozinho até o pedido terminar.
+    refreshInterval: (latest) => (latest && ["COMPLETED", "CANCELED"].includes(latest.status) ? 0 : 15000),
   })
 
   if (error instanceof ApiError && error.status === 404) notFound()
@@ -49,7 +53,8 @@ export function OrderDetail({ id }: { id: string }) {
       </Link>
 
       {justCreated && (
-        <p role="status" className="rounded-2xl bg-mint px-4 py-3 font-semibold">
+        <p role="status" className="relative overflow-hidden rounded-2xl bg-mint px-4 py-3 font-semibold animate-pop">
+          <Confetti />
           Pagamento aprovado! Seu pedido foi confirmado.
         </p>
       )}
@@ -58,6 +63,8 @@ export function OrderDetail({ id }: { id: string }) {
         <h1 className="text-3xl font-semibold">Pedido de {formatInstantDate(order.createdAt)}</h1>
         <OrderStatusBadge status={order.status} />
       </div>
+
+      <OrderTimeline status={order.status} fulfillmentType={order.fulfillmentType} scheduledDate={order.scheduledDate} />
 
       <div className="grid gap-5 md:grid-cols-[1fr_320px]">
         <section aria-labelledby="itens" className="rounded-3xl border border-secondary bg-card p-5 shadow-soft">

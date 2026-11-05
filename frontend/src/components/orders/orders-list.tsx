@@ -55,8 +55,8 @@ export function OrdersList() {
 
   return (
     <ul className="flex flex-col gap-3">
-      {data.data.map((order) => (
-        <li key={order.id}>
+      {data.data.map((order, i) => (
+        <li key={order.id} className="stagger" style={{ ["--i" as string]: i }}>
           <Link
             href={`/pedidos/${order.id}`}
             className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-secondary bg-card p-4 shadow-soft outline-none transition-transform hover:-translate-y-0.5 focus-visible:ring-3 focus-visible:ring-ring/50"

@@ -5,7 +5,7 @@ export default function LojaLayout({ children }: { children: React.ReactNode }) 
   return (
     <>
       <SiteHeader />
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">{children}</main>
+      <main className="animate-fade-up mx-auto w-full max-w-6xl flex-1 px-4 py-6">{children}</main>
       <SiteFooter />
     </>
   )

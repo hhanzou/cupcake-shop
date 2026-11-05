@@ -26,7 +26,7 @@ export function ProductCard({ product }: { product: Product }) {
           </span>
         </div>
         <div className="flex flex-1 flex-col gap-2 p-4">
-          <h2 className="text-lg leading-tight font-semibold transition-colors group-hover/card:text-[#d6345a]">{product.name}</h2>
+          <h2 className="text-lg leading-tight font-semibold transition-colors group-hover/card:text-primary">{product.name}</h2>
           <p className="text-sm text-muted-foreground">Sabor: {product.flavor}</p>
           <ul className="flex flex-wrap gap-1.5" aria-label="Categorias">
             {product.categories.map((category, i) => (

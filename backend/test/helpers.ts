@@ -49,3 +49,32 @@ export function createAdmin(app: FastifyInstance) {
 export function authHeader(token: string) {
   return { authorization: `Bearer ${token}` }
 }
+
+export async function createCategory(name: string) {
+  return db().category.create({
+    data: { name, slug: name.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, '-') },
+  })
+}
+
+export async function createProduct(
+  overrides: {
+    name?: string
+    description?: string | null
+    flavor?: string
+    price?: string
+    active?: boolean
+    categoryIds?: string[]
+  } = {},
+) {
+  counter += 1
+  return db().product.create({
+    data: {
+      name: overrides.name ?? `Cupcake ${counter}`,
+      description: overrides.description ?? null,
+      flavor: overrides.flavor ?? 'Baunilha',
+      price: overrides.price ?? '10.00',
+      active: overrides.active ?? true,
+      categories: { connect: (overrides.categoryIds ?? []).map((id) => ({ id })) },
+    },
+  })
+}

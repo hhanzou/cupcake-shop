@@ -25,6 +25,9 @@
     "fastify-type-provider-zod": "^7.0.0",
     "zod": "^4.6.7"
   },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
   "devDependencies": {
     "@types/node": "^22.10.7",
     "prisma": "^6.2.1",

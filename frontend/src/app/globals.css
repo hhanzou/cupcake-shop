@@ -2,14 +2,15 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
-
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-sans: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-fredoka), var(--font-nunito), ui-sans-serif, sans-serif;
+  --color-lilac: var(--lilac);
+  --color-mint: var(--mint);
+  --color-butter: var(--butter);
+  --shadow-soft: var(--shadow-soft);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -48,73 +49,44 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* Paleta de confeitaria: tons claros de rosa. Texto sempre em marrom chocolate. */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
-
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: #fff6f8;
+  --foreground: #5b3a3f;
+  --card: #fffdfb;
+  --card-foreground: #5b3a3f;
+  --popover: #fffdfb;
+  --popover-foreground: #5b3a3f;
+  --primary: #ff8fb8;
+  --primary-foreground: #5b3a3f;
+  --secondary: #ffd6e5;
+  --secondary-foreground: #5b3a3f;
+  --muted: #ffd6e5;
+  --muted-foreground: #7d5a5f;
+  --accent: #bdebdd;
+  --accent-foreground: #5b3a3f;
+  --destructive: #d6345a;
+  --border: #ffd6e5;
+  --input: #ffd6e5;
+  --ring: #ff8fb8;
+  --chart-1: #ff8fb8;
+  --chart-2: #bdebdd;
+  --chart-3: #dccbff;
+  --chart-4: #ffe9a8;
+  --chart-5: #5b3a3f;
+  --radius: 1.5rem;
+  --sidebar: #fffdfb;
+  --sidebar-foreground: #5b3a3f;
+  --sidebar-primary: #ff8fb8;
+  --sidebar-primary-foreground: #5b3a3f;
+  --sidebar-accent: #ffd6e5;
+  --sidebar-accent-foreground: #5b3a3f;
+  --sidebar-border: #ffd6e5;
+  --sidebar-ring: #ff8fb8;
+  --lilac: #dccbff;
+  --mint: #bdebdd;
+  --butter: #ffe9a8;
+  --shadow-soft: 0 8px 24px -8px rgb(255 143 184 / 0.35);
 }
 
 @layer base {
@@ -126,5 +98,61 @@
   }
   html {
     @apply font-sans;
+  }
+}
+
+@layer base {
+  h1, h2, h3, h4 {
+    font-family: var(--font-heading);
+  }
+  body {
+    background-image:
+      radial-gradient(circle at 12% 18%, var(--lilac) 0 3px, transparent 4px),
+      radial-gradient(circle at 78% 32%, var(--mint) 0 3px, transparent 4px),
+      radial-gradient(circle at 44% 72%, var(--butter) 0 3px, transparent 4px),
+      radial-gradient(circle at 90% 84%, var(--secondary) 0 3px, transparent 4px);
+    background-size: 220px 220px, 260px 260px, 300px 300px, 340px 340px;
+  }
+}
+
+/* Toldo listrado da fachada */
+.awning {
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--primary) 0 36px,
+    #ffffff 36px 72px
+  );
+}
+.awning-edge {
+  height: 14px;
+  background-image: radial-gradient(circle at 18px 0, var(--primary) 17px, transparent 18px),
+    radial-gradient(circle at 54px 0, #ffffff 17px, transparent 18px);
+  background-size: 72px 14px;
+  background-repeat: repeat-x;
+}
+
+/* Divisor ondulado, lembrando cobertura */
+.wavy-divider {
+  height: 16px;
+  background:
+    radial-gradient(circle at 12px 0, transparent 11px, var(--secondary) 12px) repeat-x;
+  background-size: 24px 16px;
+}
+
+@keyframes hop {
+  0%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-6px); }
+  70% { transform: translateY(1px); }
+}
+.animate-hop {
+  animation: hop 0.5s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
 }

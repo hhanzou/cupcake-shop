@@ -48,3 +48,8 @@ export function isoToLocalDate(iso: string): Date {
 export function localDateToIso(date: Date): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
 }
+
+/** Instante (ISO com hora) -> "20/11/2026" no fuso de São Paulo. */
+export function formatInstantDate(iso: string): string {
+  return new Intl.DateTimeFormat('pt-BR', { timeZone: TIME_ZONE }).format(new Date(iso))
+}

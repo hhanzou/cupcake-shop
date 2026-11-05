@@ -1,12 +1,11 @@
+import { env } from './env'
 import { buildApp } from './app'
 
 async function start() {
   const app = await buildApp()
-  const port = Number(process.env.PORT) || 3000
-  const host = process.env.HOST || '0.0.0.0'
 
   try {
-    await app.listen({ port, host })
+    await app.listen({ port: env.PORT, host: env.HOST })
   } catch (err) {
     app.log.error(err)
     process.exit(1)

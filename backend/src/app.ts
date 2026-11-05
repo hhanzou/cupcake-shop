@@ -8,6 +8,9 @@ import prismaPlugin from './plugins/prisma'
 import errorsPlugin from './plugins/errors'
 import authPlugin from './plugins/auth'
 import authRoutes from './modules/auth/auth.routes'
+import cartRoutes from './modules/cart/cart.routes'
+import orderRoutes from './modules/orders/orders.routes'
+import adminOrderRoutes from './modules/orders/orders.admin.routes'
 import productRoutes from './modules/products/products.routes'
 import categoryRoutes from './modules/categories/categories.routes'
 
@@ -28,6 +31,9 @@ export async function buildApp() {
   await app.register(authRoutes, { prefix: '/auth' })
   await app.register(categoryRoutes, { prefix: '/categories' })
   await app.register(productRoutes, { prefix: '/products' })
+  await app.register(cartRoutes, { prefix: '/cart' })
+  await app.register(orderRoutes, { prefix: '/orders' })
+  await app.register(adminOrderRoutes, { prefix: '/admin/orders' })
 
   app.get('/health', async () => ({ status: 'ok' }))
 

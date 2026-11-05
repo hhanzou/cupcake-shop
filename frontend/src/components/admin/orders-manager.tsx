@@ -97,7 +97,7 @@ export function OrdersManager() {
       ) : data.data.length === 0 ? (
         <p className="rounded-3xl border border-secondary bg-card p-8 text-center">Nenhum pedido encontrado.</p>
       ) : (
-        <div className="overflow-x-auto rounded-3xl border border-secondary bg-card shadow-soft">
+        <div className="overflow-x-auto rounded-3xl border border-secondary bg-card p-3 shadow-soft">
           <Table>
             <TableHeader>
               <TableRow>

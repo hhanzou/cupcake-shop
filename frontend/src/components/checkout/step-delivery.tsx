@@ -73,7 +73,7 @@ export function StepDelivery() {
           control={control}
           name="scheduledDate"
           render={({ field }) => (
-            <div className="w-fit max-w-full overflow-x-auto rounded-3xl border border-secondary bg-card shadow-soft">
+            <div className="w-fit max-w-full overflow-x-auto rounded-3xl border border-secondary bg-card p-3 shadow-soft">
               <Calendar
                 mode="single"
                 locale={ptBR}

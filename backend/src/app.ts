@@ -6,6 +6,7 @@ import prismaPlugin from './plugins/prisma'
 import errorsPlugin from './plugins/errors'
 import authPlugin from './plugins/auth'
 import authRoutes from './modules/auth/auth.routes'
+import categoryRoutes from './modules/categories/categories.routes'
 
 export async function buildApp() {
   const app = Fastify({
@@ -21,6 +22,7 @@ export async function buildApp() {
   await app.register(authPlugin)
 
   await app.register(authRoutes, { prefix: '/auth' })
+  await app.register(categoryRoutes, { prefix: '/categories' })
 
   app.get('/health', async () => ({ status: 'ok' }))
 

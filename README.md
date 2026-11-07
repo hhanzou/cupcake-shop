@@ -115,14 +115,53 @@ Autenticação por JWT no header `Authorization: Bearer <token>`. Erros seguem o
 ## Estrutura
 
 ```text
-backend/
-├── prisma/        schema, migrations e seed
-├── src/
-│   ├── modules/   auth, categories, products, cart, orders (routes, service, schema)
-│   ├── plugins/   prisma, auth e errors
-│   ├── shared/    slugify, dinheiro e detecção de imagem
-│   ├── app.ts
-│   ├── env.ts
-│   └── server.ts
-└── test/
+cupcake-shop/
+├── docker-compose.yml   API e Postgres
+├── backend/
+│   ├── prisma/          schema, migrations e seed
+│   ├── src/
+│   │   ├── modules/     auth, categories, products, cart, orders (routes, service, schema)
+│   │   ├── plugins/     prisma, auth e errors
+│   │   ├── shared/      slugify, dinheiro e detecção de imagem
+│   │   ├── app.ts
+│   │   ├── env.ts
+│   │   └── server.ts
+│   └── test/
+└── frontend/
+    ├── public/          placeholder de imagem
+    └── src/
+        ├── app/
+        │   ├── (loja)/  catálogo, cupcakes/[id], carrinho, checkout, pedidos, entrar e cadastro
+        │   ├── admin/   cupcakes, categorias e pedidos (área protegida)
+        │   ├── layout.tsx
+        │   └── globals.css   tema de confeitaria e animações
+        ├── components/
+        │   ├── ui/            componentes do shadcn/ui
+        │   ├── layout/        cabeçalho com toldo, rodapé e menu do usuário
+        │   ├── catalog/       card, filtros, paginação
+        │   ├── cart/          botão de adicionar, contador e tela do carrinho
+        │   ├── checkout/      etapas de entrega e pagamento, diálogo de login
+        │   ├── orders/        lista, detalhe, linha do tempo, miniaturas e "pedir novamente"
+        │   ├── auth/          formulários de login e cadastro, sessão
+        │   ├── admin/         tabelas, formulário de cupcake, categorias e pedidos
+        │   └── illustrations/ cupcake em SVG e confete
+        ├── hooks/       hidratação, rota protegida e mapa do catálogo
+        ├── lib/
+        │   ├── api.ts           cliente HTTP e ApiError
+        │   ├── services/        uma função por endpoint
+        │   ├── types.ts         tipos das respostas da API
+        │   └── money, schedule, safe-next, labels, store, image-url, catalog-params
+        └── stores/      carrinho e sessão (zustand, persistidos no localStorage)
 ```
+
+### Telas do frontend
+
+| Rota | Acesso | Conteúdo |
+| --- | --- | --- |
+| `/` | Público | Catálogo com pesquisa, filtros, ordenação e paginação |
+| `/cupcakes/[id]` | Público | Detalhe do cupcake |
+| `/carrinho` | Público | Itens e total calculado pela API |
+| `/checkout` | Público até o pagamento | Retirada ou entrega, data, endereço e pagamento |
+| `/entrar`, `/cadastro` | Público | Login e criação de conta |
+| `/pedidos`, `/pedidos/[id]` | Logado | Histórico, acompanhamento do status e "pedir novamente" |
+| `/admin/cupcakes`, `/admin/categorias`, `/admin/pedidos` | Admin | Gestão da loja |

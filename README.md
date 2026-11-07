@@ -78,6 +78,72 @@ npm run build
 
 O pagamento é uma simulação: nenhum dado de cartão é pedido.
 
+## Deploy da API (Render + Neon)
+
+A API é publicada como imagem Docker no GitHub Container Registry e roda no Render, com o banco no Neon.
+
+### Imagem de produção
+
+O estágio `production` do [backend/Dockerfile](backend/Dockerfile) gera uma imagem de cerca de 63 MB comprimida:
+- Alpine puro com só o binário do Node: sem npm, yarn ou corepack.
+- Só dependências de produção, sem as engines e os runtimes do Prisma que a API não usa.
+- Roda como usuário sem privilégios e encerra de forma limpa ao receber `SIGTERM`.
+
+Para testar localmente:
+
+```bash
+docker build --target production -t cupcakeshop-api backend
+```
+
+### Como publicar uma versão
+
+Publique uma release no GitHub com uma tag no formato `v1.0.0`. O workflow [release.yml](.github/workflows/release.yml) executa, em ordem:
+
+1. Typecheck e testes, com um Postgres temporário.
+2. Build e push da imagem `ghcr.io/hhanzou/cupcakeshop-api`, com as tags `1.0.0`, `1.0`, `latest` e `sha-<commit>`.
+3. `prisma migrate deploy` no Neon.
+4. Deploy no Render, usando a tag `sha-<commit>` da imagem.
+
+O workflow também pode ser disparado manualmente na aba Actions. Nesse caso, a imagem recebe só a tag `sha-<commit>`.
+
+### Configuração inicial (uma vez)
+
+1. **Neon:** crie o projeto e copie duas connection strings:
+   - **Pooled** (host com `-pooler`): usada pela API.
+   - **Direct** (host sem `-pooler`): usada nas migrations e no seed.
+2. **Primeira release:** publique a release. As etapas de migrations e deploy vão avisar que os secrets não existem, mas a imagem será publicada.
+3. **Visibilidade da imagem:** no GitHub, em Packages, deixe `cupcakeshop-api` público. A alternativa é cadastrar no Render uma credencial de registry com um token `read:packages`.
+4. **Render:** crie um Web Service a partir de imagem existente:
+   - Imagem: `ghcr.io/hhanzou/cupcakeshop-api:latest`.
+   - Health Check Path: `/health`.
+   - Variáveis de ambiente:
+
+     | Variável | Valor |
+     | --- | --- |
+     | `DATABASE_URL` | URL pooled do Neon com `?sslmode=require&pgbouncer=true&connect_timeout=15` |
+     | `JWT_SECRET` | Segredo aleatório com 32 caracteres ou mais |
+     | `CORS_ORIGIN` | Domínio do front, por exemplo `https://cupcakeshop.vercel.app` |
+
+     O Render define `PORT` sozinho, e a imagem já usa `NODE_ENV=production`.
+5. **Secrets no GitHub** (Settings > Secrets and variables > Actions):
+
+   | Secret | Valor |
+   | --- | --- |
+   | `NEON_DIRECT_URL` | URL direta do Neon |
+   | `RENDER_DEPLOY_HOOK_URL` | Deploy Hook do serviço, em Settings no Render |
+
+6. **Migrations:** dispare o workflow de novo para aplicar as migrations, ou rode `npx prisma migrate deploy` uma vez pela máquina local, como no passo seguinte.
+7. **Seed:** rode uma única vez pela máquina local, em `backend/`, apontando para a URL direta e com uma senha forte de admin:
+
+   ```powershell
+   $env:DATABASE_URL="<url direta do Neon>"
+   $env:ADMIN_EMAIL="<e-mail do admin>"
+   $env:ADMIN_PASSWORD="<senha forte>"
+   npx prisma db seed
+   ```
+
+O plano gratuito do Render coloca a API para dormir após 15 minutos sem acesso, e ela leva cerca de 1 minuto para acordar. O Neon também suspende o banco quando ocioso, e a primeira consulta depois disso demora alguns segundos.
+
 ## Variáveis de ambiente
 
 | Variável | Obrigatória | Descrição |

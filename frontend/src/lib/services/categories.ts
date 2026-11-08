@@ -2,8 +2,8 @@ import { request } from '../api'
 import { authRequest } from '../auth-request'
 import type { Category } from '../types'
 
-export const listCategories = (cache?: RequestCache) =>
-  request<{ data: Category[] }>('/categories', { cache })
+export const listCategories = (cache?: RequestCache, timeoutMs?: number) =>
+  request<{ data: Category[] }>('/categories', { cache, timeoutMs })
 
 export const createCategory = (body: { name: string }) =>
   authRequest<Category>('/categories', { method: 'POST', body })

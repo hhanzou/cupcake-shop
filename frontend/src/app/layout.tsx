@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { Fredoka, Nunito } from "next/font/google"
+import { ApiSlowNotifier } from "@/components/layout/api-slow-notifier"
 import { SessionBootstrap } from "@/components/auth/session-bootstrap"
 import { Toaster } from "@/components/ui/sonner"
 import "./globals.css"
@@ -17,6 +18,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="pt-BR" className={`${fredoka.variable} ${nunito.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
         <SessionBootstrap />
+        <ApiSlowNotifier />
         {children}
         <Toaster />
       </body>

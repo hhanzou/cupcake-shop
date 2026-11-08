@@ -5,17 +5,22 @@ import { notFound } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
 import { AddToCartButton } from "@/components/cart/add-to-cart-button"
 import { Badge } from "@/components/ui/badge"
-import { ApiError } from "@/lib/api"
+import { ApiWakeScreen } from "@/components/layout/api-wake-screen"
+import { ApiError, isApiAsleep } from "@/lib/api"
 import { imageUrl } from "@/lib/image-url"
 import { formatPrice } from "@/lib/money"
 import { getProduct } from "@/lib/services/products"
 import type { Product } from "@/lib/types"
 
-async function loadProduct(id: string): Promise<Product> {
+// Passou disso, a API provavelmente está acordando (cold start): mostra a tela de espera.
+const SERVER_TIMEOUT_MS = 4000
+
+async function loadProduct(id: string): Promise<Product | "asleep"> {
   try {
-    return await getProduct(id, "no-store")
+    return await getProduct(id, "no-store", SERVER_TIMEOUT_MS)
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) notFound()
+    if (isApiAsleep(error)) return "asleep"
     throw error
   }
 }
@@ -27,7 +32,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id } = await params
   try {
-    const product = await getProduct(id, "no-store")
+    const product = await getProduct(id, "no-store", SERVER_TIMEOUT_MS)
     return {
       title: product.name,
       description: product.description ?? `Cupcake de ${product.flavor} da CupcakeShop.`,
@@ -40,6 +45,7 @@ export async function generateMetadata({
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const product = await loadProduct(id)
+  if (product === "asleep") return <ApiWakeScreen />
 
   return (
     <div className="flex flex-col gap-6">

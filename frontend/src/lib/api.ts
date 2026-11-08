@@ -20,6 +20,19 @@ export type RequestOptions = {
   token?: string | null
   formData?: FormData
   cache?: RequestCache
+  /** Aborta a requisição após esse tempo e lança ApiError(0, 'TIMEOUT'). */
+  timeoutMs?: number
+  /** Não dispara o aviso global de API lenta (usado pela tela "acordando a API"). */
+  quiet?: boolean
+}
+
+export const API_SLOW_EVENT = 'api:slow'
+export const API_DONE_EVENT = 'api:done'
+const SLOW_AFTER_MS = 4000
+
+/** True quando a API provavelmente está dormindo (cold start): sem resposta ou 502/503/504. */
+export function isApiAsleep(error: unknown): boolean {
+  return error instanceof ApiError && (error.status === 0 || [502, 503, 504].includes(error.status))
 }
 
 function baseUrl(): string {
@@ -31,7 +44,7 @@ function baseUrl(): string {
 }
 
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { method = 'GET', body, token, formData, cache } = options
+  const { method = 'GET', body, token, formData, cache, timeoutMs, quiet } = options
   const headers: Record<string, string> = {}
   if (token) headers.Authorization = `Bearer ${token}`
 
@@ -45,15 +58,37 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
 
   const url = `${baseUrl()}${path}`
 
+  // No navegador, avisa a interface quando a resposta demora (API acordando).
+  const inBrowser = typeof window !== 'undefined' && !quiet
+  let slowFired = false
+  const slowTimer = inBrowser
+    ? setTimeout(() => {
+        slowFired = true
+        window.dispatchEvent(new Event(API_SLOW_EVENT))
+      }, SLOW_AFTER_MS)
+    : undefined
+
   let response: Response
   try {
-    response = await fetch(url, { method, headers, body: payload, cache })
-  } catch {
+    response = await fetch(url, {
+      method,
+      headers,
+      body: payload,
+      cache,
+      signal: timeoutMs ? AbortSignal.timeout(timeoutMs) : undefined,
+    })
+  } catch (error) {
+    if (error instanceof Error && error.name === 'TimeoutError') {
+      throw new ApiError(0, 'TIMEOUT', 'O servidor demorou demais para responder. Tente novamente.')
+    }
     throw new ApiError(
       0,
       'NETWORK_ERROR',
       'Não foi possível falar com o servidor. Verifique sua conexão e tente novamente.',
     )
+  } finally {
+    if (slowTimer) clearTimeout(slowTimer)
+    if (slowFired) window.dispatchEvent(new Event(API_DONE_EVENT))
   }
 
   if (response.status === 204) return undefined as T

@@ -5,17 +5,18 @@ import type { Paginated, Product } from '../types'
 export function listProducts(
   params: Record<string, string | number | undefined> = {},
   cache?: RequestCache,
+  timeoutMs?: number,
 ) {
   const search = new URLSearchParams()
   for (const [key, value] of Object.entries(params)) {
     if (value !== undefined && value !== '') search.set(key, String(value))
   }
   const qs = search.toString()
-  return request<Paginated<Product>>(`/products${qs ? `?${qs}` : ''}`, { cache })
+  return request<Paginated<Product>>(`/products${qs ? `?${qs}` : ''}`, { cache, timeoutMs })
 }
 
-export const getProduct = (id: string, cache?: RequestCache) =>
-  request<Product>(`/products/${encodeURIComponent(id)}`, { cache })
+export const getProduct = (id: string, cache?: RequestCache, timeoutMs?: number) =>
+  request<Product>(`/products/${encodeURIComponent(id)}`, { cache, timeoutMs })
 
 export type ProductInput = {
   name: string

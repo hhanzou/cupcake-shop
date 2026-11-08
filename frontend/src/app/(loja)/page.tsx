@@ -4,6 +4,8 @@ import { EmptyCatalog } from "@/components/catalog/empty-catalog"
 import { CatalogFilters } from "@/components/catalog/catalog-filters"
 import { Pagination } from "@/components/catalog/pagination"
 import { ProductCard } from "@/components/catalog/product-card"
+import { ApiWakeScreen } from "@/components/layout/api-wake-screen"
+import { isApiAsleep } from "@/lib/api"
 import { parseCatalogParams } from "@/lib/catalog-params"
 import { listCategories } from "@/lib/services/categories"
 import { listProducts } from "@/lib/services/products"
@@ -14,6 +16,8 @@ export const metadata: Metadata = {
 }
 
 const LIMIT = 12
+// Passou disso, a API provavelmente está acordando (cold start): mostra a tela de espera.
+const SERVER_TIMEOUT_MS = 4000
 
 export default async function Home({
   searchParams,
@@ -22,23 +26,31 @@ export default async function Home({
 }) {
   const params = parseCatalogParams(await searchParams)
 
-  const [products, categories, allProducts] = await Promise.all([
-    listProducts(
-      {
-        q: params.q,
-        flavor: params.flavor,
-        category: params.category,
-        minPrice: params.minPrice,
-        maxPrice: params.maxPrice,
-        sort: params.sort,
-        page: params.page,
-        limit: LIMIT,
-      },
-      "no-store",
-    ),
-    listCategories("no-store"),
-    listProducts({ limit: 50 }, "no-store"),
-  ])
+  let data
+  try {
+    data = await Promise.all([
+      listProducts(
+        {
+          q: params.q,
+          flavor: params.flavor,
+          category: params.category,
+          minPrice: params.minPrice,
+          maxPrice: params.maxPrice,
+          sort: params.sort,
+          page: params.page,
+          limit: LIMIT,
+        },
+        "no-store",
+        SERVER_TIMEOUT_MS,
+      ),
+      listCategories("no-store", SERVER_TIMEOUT_MS),
+      listProducts({ limit: 50 }, "no-store", SERVER_TIMEOUT_MS),
+    ])
+  } catch (error) {
+    if (isApiAsleep(error)) return <ApiWakeScreen />
+    throw error
+  }
+  const [products, categories, allProducts] = data
 
   const flavors = [...new Set(allProducts.data.map((p) => p.flavor))].sort((a, b) =>
     a.localeCompare(b, "pt-BR"),

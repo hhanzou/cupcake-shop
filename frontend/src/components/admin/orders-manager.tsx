@@ -157,9 +157,12 @@ export function OrdersManager() {
                             <div>
                               <h3 className="mb-1 font-semibold">Itens</h3>
                               <ul className="text-sm">
-                                {order.items.map((item) => (
-                                  <li key={item.productId}>
+                                {order.items.map((item, index) => (
+                                  <li key={`${item.productId}-${index}`}>
                                     {item.quantity} × {item.name} — {formatPrice(item.lineTotal)}
+                                    {item.notes && (
+                                      <span className="block font-semibold text-foreground">Obs.: {item.notes}</span>
+                                    )}
                                   </li>
                                 ))}
                               </ul>

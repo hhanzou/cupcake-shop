@@ -10,6 +10,7 @@ export async function previewCart(prisma: PrismaClient, items: CartItemInput[]) 
       productId: line.productId,
       name: line.name,
       quantity: line.quantity,
+      notes: line.notes,
       unitPrice: formatMoney(line.unitPrice),
       lineTotal: formatMoney(line.lineTotal),
     })),

@@ -209,6 +209,86 @@ describe('orders', () => {
       expect(merged.statusCode).toBe(400)
     })
 
+    describe('observações por item', () => {
+      it('grava a observação sem espaços extras, e vazio ou ausente vira null', async () => {
+        const [a, b, c] = await Promise.all([createProduct(), createProduct(), createProduct()])
+        const res = await post(
+          pickup([
+            { productId: a.id, quantity: 1, notes: '  sem amendoim, morango extra  ' },
+            { productId: b.id, quantity: 1, notes: '   ' },
+            { productId: c.id, quantity: 1 },
+          ]),
+        )
+        expect(res.statusCode).toBe(201)
+        const notesById = Object.fromEntries(
+          res.json().items.map((i: { productId: string; notes: string | null }) => [i.productId, i.notes]),
+        )
+        expect(notesById).toEqual({ [a.id]: 'sem amendoim, morango extra', [b.id]: null, [c.id]: null })
+
+        const saved = await db().orderItem.findFirstOrThrow({ where: { productId: a.id } })
+        expect(saved.notes).toBe('sem amendoim, morango extra')
+
+        const history = await app.inject({
+          method: 'GET',
+          url: `/orders/${res.json().id}`,
+          headers: authHeader(user.token),
+        })
+        expect(history.json().items).toContainEqual(
+          expect.objectContaining({ productId: a.id, notes: 'sem amendoim, morango extra' }),
+        )
+      })
+
+      it('observação com mais de 200 caracteres dá 400', async () => {
+        const p = await createProduct()
+        const res = await post(pickup([{ productId: p.id, quantity: 1, notes: 'a'.repeat(201) }]))
+        expect(res.statusCode).toBe(400)
+        expect(res.json().error.code).toBe('VALIDATION_ERROR')
+        expect(await db().order.count()).toBe(0)
+        expect(
+          (await post(pickup([{ productId: p.id, quantity: 1, notes: 'a'.repeat(200) }]))).statusCode,
+        ).toBe(201)
+      })
+
+      it('mesmo cupcake com observações diferentes vira linhas separadas', async () => {
+        const p = await createProduct({ price: '5.00' })
+        const res = await post(
+          pickup([
+            { productId: p.id, quantity: 2, notes: 'sem amendoim' },
+            { productId: p.id, quantity: 1, notes: 'morango extra' },
+            { productId: p.id, quantity: 1, notes: 'sem amendoim' },
+          ]),
+        )
+        expect(res.statusCode).toBe(201)
+        expect(res.json().total).toBe('20.00')
+        const lines = res.json().items.map((i: { quantity: number; notes: string }) => [i.notes, i.quantity])
+        expect(lines).toHaveLength(2)
+        expect(lines).toEqual(expect.arrayContaining([['sem amendoim', 3], ['morango extra', 1]]))
+      })
+
+      it('o limite de 99 vale para o total do cupcake, somando as observações', async () => {
+        const p = await createProduct()
+        const res = await post(
+          pickup([
+            { productId: p.id, quantity: 50, notes: 'sem amendoim' },
+            { productId: p.id, quantity: 50, notes: 'morango extra' },
+          ]),
+        )
+        expect(res.statusCode).toBe(400)
+        expect(res.json().error.code).toBe('CART_INVALID_QUANTITY')
+      })
+
+      it('o preview do carrinho devolve as observações', async () => {
+        const p = await createProduct()
+        const res = await app.inject({
+          method: 'POST',
+          url: '/cart/preview',
+          payload: { items: [{ productId: p.id, quantity: 1, notes: 'sem açúcar' }] },
+        })
+        expect(res.statusCode).toBe(200)
+        expect(res.json().items[0].notes).toBe('sem açúcar')
+      })
+    })
+
     it('soma itens repetidos do mesmo produto', async () => {
       const p = await createProduct({ price: '5.00' })
       const res = await post(

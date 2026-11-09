@@ -78,10 +78,10 @@ export function OrderDetail({ id }: { id: string }) {
             Itens
           </h2>
           <ul className="divide-y divide-secondary">
-            {order.items.map((item) => {
+            {order.items.map((item, index) => {
               const product = catalog.get(item.productId)
               return (
-                <li key={item.productId} className="flex items-center gap-3 py-3">
+                <li key={`${item.productId}-${index}`} className="flex items-center gap-3 py-3">
                   {product ? (
                     <Link href={`/cupcakes/${product.id}`} className="relative size-16 shrink-0 overflow-hidden rounded-2xl" aria-label={`Ver ${item.name}`}>
                       <Image src={imageUrl(product.imageUrl)} alt="" fill unoptimized sizes="64px" className="object-cover" />
@@ -94,6 +94,7 @@ export function OrderDetail({ id }: { id: string }) {
                   <span className="flex-1">
                     {item.quantity} × {item.name}
                     <span className="block text-sm text-muted-foreground">{formatPrice(item.unitPrice)} cada</span>
+                    {item.notes && <span className="block text-sm">Obs.: {item.notes}</span>}
                     {catalogReady && !product && <span className="block text-sm font-semibold text-destructive">Não está mais à venda</span>}
                   </span>
                   <div className="flex flex-col items-end gap-1">

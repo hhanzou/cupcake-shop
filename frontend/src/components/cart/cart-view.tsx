@@ -4,28 +4,54 @@ import Image from "next/image"
 import Link from "next/link"
 import useSWR from "swr"
 import { Minus, Plus, Trash2 } from "lucide-react"
+import { toast } from "sonner"
 import { CupcakeIllustration } from "@/components/illustrations/cupcake"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Textarea } from "@/components/ui/textarea"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { imageUrl } from "@/lib/image-url"
-import { formatPrice } from "@/lib/money"
+import { formatPrice, multiplyPrice } from "@/lib/money"
 import { previewCart } from "@/lib/services/cart"
-import { MAX_QUANTITY, useCart } from "@/stores/cart"
+import {
+  MAX_NOTES_LENGTH,
+  MAX_QUANTITY,
+  previewKey,
+  productTotal,
+  toPriceItems,
+  useCart,
+} from "@/stores/cart"
 
 export function CartView() {
   const hydrated = useHydrated()
   const items = useCart((s) => s.items)
   const setQuantity = useCart((s) => s.setQuantity)
+  const setNotes = useCart((s) => s.setNotes)
+  const mergeDuplicates = useCart((s) => s.mergeDuplicates)
+  const addVariant = useCart((s) => s.addVariant)
   const remove = useCart((s) => s.remove)
 
-  // A chave usa só productId e quantity; nome e imagem não mudam o preço.
-  const key = items.length ? ["cart-preview", items.map((i) => `${i.productId}:${i.quantity}`).join(",")] : null
+  // A chave usa só cupcake e quantidade: nome, imagem e observações não mudam o preço.
   const { data, error, isLoading, isValidating, mutate } = useSWR(
-    key,
-    () => previewCart(items.map(({ productId, quantity }) => ({ productId, quantity }))),
+    previewKey(items),
+    () => previewCart(toPriceItems(items)),
     { keepPreviousData: true, revalidateOnFocus: false },
   )
+
+  function onAddVariant(lineId: string) {
+    const index = useCart.getState().items.findIndex((i) => i.id === lineId)
+    const result = addVariant(lineId)
+    if (result === "limit") {
+      toast.warning(`Limite de ${MAX_QUANTITY} unidades por cupcake atingido`)
+      return
+    }
+    if (result === "full") {
+      toast.warning("O carrinho já tem o máximo de 100 itens diferentes")
+      return
+    }
+    const created = useCart.getState().items[index + 1]
+    if (created) requestAnimationFrame(() => document.getElementById(`notes-${created.id}`)?.focus())
+  }
 
   if (!hydrated) {
     return <Skeleton className="h-64 rounded-3xl" role="status" aria-label="Carregando carrinho" />
@@ -45,7 +71,7 @@ export function CartView() {
   }
 
   const unavailable = new Set(data?.unavailableProductIds ?? [])
-  const priced = new Map(data?.items.map((i) => [i.productId, i]))
+  const unitPrices = new Map(data?.items.map((i) => [i.productId, i.unitPrice]))
   const canCheckout = !!data && !error && unavailable.size === 0
 
   return (
@@ -67,11 +93,12 @@ export function CartView() {
 
         <ul className="flex flex-col gap-3">
           {items.map((item, i) => {
-            const line = priced.get(item.productId)
+            const unitPrice = unitPrices.get(item.productId)
             const isUnavailable = unavailable.has(item.productId)
+            const atLimit = productTotal(items, item.productId) >= MAX_QUANTITY
             return (
               <li
-                key={item.productId}
+                key={item.id}
                 className="stagger flex gap-4 rounded-3xl border border-secondary bg-card p-3 shadow-soft"
                 style={{ ["--i" as string]: i }}
               >
@@ -91,14 +118,16 @@ export function CartView() {
                       <h2 className="text-lg leading-tight font-semibold">{item.name}</h2>
                       {isUnavailable ? (
                         <p className="text-sm font-semibold text-destructive">Indisponível</p>
-                      ) : line ? (
-                        <p className="text-sm text-muted-foreground">{formatPrice(line.unitPrice)} cada</p>
+                      ) : unitPrice ? (
+                        <p className="text-sm text-muted-foreground">{formatPrice(unitPrice)} cada</p>
                       ) : (
                         <Skeleton className="mt-1 h-4 w-20" />
                       )}
                     </div>
-                    {line && !isUnavailable && (
-                      <p className="font-heading text-lg font-semibold">{formatPrice(line.lineTotal)}</p>
+                    {unitPrice && !isUnavailable && (
+                      <p className="font-heading text-lg font-semibold">
+                        {formatPrice(multiplyPrice(unitPrice, item.quantity))}
+                      </p>
                     )}
                   </div>
 
@@ -113,7 +142,7 @@ export function CartView() {
                           size="icon-sm"
                           aria-label="Diminuir quantidade"
                           disabled={item.quantity <= 1}
-                          onClick={() => setQuantity(item.productId, item.quantity - 1)}
+                          onClick={() => setQuantity(item.id, item.quantity - 1)}
                         >
                           <Minus />
                         </Button>
@@ -125,18 +154,52 @@ export function CartView() {
                           variant="secondary"
                           size="icon-sm"
                           aria-label="Aumentar quantidade"
-                          disabled={item.quantity >= MAX_QUANTITY}
-                          onClick={() => setQuantity(item.productId, item.quantity + 1)}
+                          disabled={atLimit}
+                          onClick={() => setQuantity(item.id, item.quantity + 1)}
                         >
                           <Plus />
                         </Button>
                       </div>
                     )}
-                    <Button type="button" variant="ghost" size="sm" onClick={() => remove(item.productId)}>
+                    <Button type="button" variant="ghost" size="sm" onClick={() => remove(item.id)}>
                       <Trash2 aria-hidden="true" />
                       Remover
                     </Button>
                   </div>
+
+                  {!isUnavailable && (
+                    <div className="flex flex-col gap-1">
+                      <label htmlFor={`notes-${item.id}`} className="text-sm font-semibold">
+                        Observações <span className="font-normal text-muted-foreground">(opcional)</span>
+                      </label>
+                      <Textarea
+                        id={`notes-${item.id}`}
+                        value={item.notes}
+                        onChange={(e) => setNotes(item.id, e.target.value)}
+                        onBlur={mergeDuplicates}
+                        maxLength={MAX_NOTES_LENGTH}
+                        rows={2}
+                        placeholder="Ex.: sem amendoim, morango extra"
+                        aria-describedby={`notes-${item.id}-count`}
+                        className="min-h-12"
+                      />
+                      <div className="flex items-center justify-between gap-2">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="xs"
+                          disabled={atLimit}
+                          onClick={() => onAddVariant(item.id)}
+                        >
+                          <Plus aria-hidden="true" />
+                          Mais um com outra observação
+                        </Button>
+                        <span id={`notes-${item.id}-count`} className="text-xs text-muted-foreground">
+                          {item.notes.length}/{MAX_NOTES_LENGTH}
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </li>
             )
@@ -159,7 +222,11 @@ export function CartView() {
           )}
         </div>
         {canCheckout ? (
-          <Link href="/checkout" className={buttonVariants({ size: "lg", className: "mt-5 w-full" })}>
+          <Link
+            href="/checkout"
+            onClick={mergeDuplicates}
+            className={buttonVariants({ size: "lg", className: "mt-5 w-full" })}
+          >
             Finalizar compra
           </Link>
         ) : (

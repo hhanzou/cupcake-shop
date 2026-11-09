@@ -43,6 +43,7 @@ export function serializeOrder(order: OrderWithItems | OrderWithUser) {
       productId: item.productId,
       name: item.product.name,
       quantity: item.quantity,
+      notes: item.notes,
       unitPrice: formatMoney(item.unitPrice),
       lineTotal: formatMoney(item.unitPrice.mul(item.quantity)),
     })),
@@ -56,21 +57,31 @@ export type PricedLine = {
   productId: string
   name: string
   quantity: number
+  notes: string | null
   unitPrice: Prisma.Decimal
   lineTotal: Prisma.Decimal
 }
 
 /**
- * Soma quantidades repetidas, busca os preços no banco e separa itens disponíveis
- * (produto ativo) dos indisponíveis (inativo ou inexistente). Usada por carrinho e pedidos.
+ * Agrupa itens repetidos (mesmo cupcake e mesma observação), busca os preços no banco e
+ * separa itens disponíveis (produto ativo) dos indisponíveis (inativo ou inexistente).
+ * Observações diferentes do mesmo cupcake viram linhas separadas, mas o limite de 99
+ * vale para o total do cupcake. Usada por carrinho e pedidos.
  */
 export async function priceItems(db: Db, items: CartItemInput[]) {
-  const quantities = new Map<string, number>()
+  const groups = new Map<string, { productId: string; notes: string | null; quantity: number }>()
+  const totals = new Map<string, number>()
+
   for (const item of items) {
-    quantities.set(item.productId, (quantities.get(item.productId) ?? 0) + item.quantity)
+    const notes = item.notes ?? null
+    const key = JSON.stringify([item.productId, notes])
+    const group = groups.get(key)
+    if (group) group.quantity += item.quantity
+    else groups.set(key, { productId: item.productId, notes, quantity: item.quantity })
+    totals.set(item.productId, (totals.get(item.productId) ?? 0) + item.quantity)
   }
 
-  for (const [productId, quantity] of quantities) {
+  for (const [productId, quantity] of totals) {
     if (quantity > 99) {
       throw new AppError(
         400,
@@ -82,27 +93,27 @@ export async function priceItems(db: Db, items: CartItemInput[]) {
   }
 
   const products = await db.product.findMany({
-    where: { id: { in: [...quantities.keys()] } },
+    where: { id: { in: [...totals.keys()] } },
     select: { id: true, name: true, price: true, active: true },
   })
   const byId = new Map(products.map((p) => [p.id, p]))
 
   const lines: PricedLine[] = []
-  const unavailableProductIds: string[] = []
+  const unavailable = new Set<string>()
   let total = new Prisma.Decimal(0)
 
-  for (const [productId, quantity] of quantities) {
+  for (const { productId, notes, quantity } of groups.values()) {
     const product = byId.get(productId)
     if (!product || !product.active) {
-      unavailableProductIds.push(productId)
+      unavailable.add(productId)
       continue
     }
     const lineTotal = product.price.mul(quantity)
     total = total.add(lineTotal)
-    lines.push({ productId, name: product.name, quantity, unitPrice: product.price, lineTotal })
+    lines.push({ productId, name: product.name, quantity, notes, unitPrice: product.price, lineTotal })
   }
 
-  return { lines, unavailableProductIds, total }
+  return { lines, unavailableProductIds: [...unavailable], total }
 }
 
 const ADDRESS_REQUIRED = ['street', 'number', 'district', 'city', 'state', 'zipCode'] as const
@@ -174,6 +185,7 @@ export async function createOrder(
             productId: line.productId,
             quantity: line.quantity,
             unitPrice: line.unitPrice,
+            notes: line.notes,
           })),
         },
       },

@@ -1,8 +1,19 @@
 import { z } from 'zod'
 
+export const MAX_NOTES_LENGTH = 200
+
+/** Observação livre do item ("sem amendoim, morango extra"). Vazio vira null. */
+const notes = z
+  .string()
+  .trim()
+  .max(MAX_NOTES_LENGTH, `A observação pode ter até ${MAX_NOTES_LENGTH} caracteres`)
+  .nullish()
+  .transform((value) => value || null)
+
 export const cartItem = z.object({
   productId: z.string().min(1),
   quantity: z.number().int().min(1).max(99),
+  notes,
 })
 
 export const cartItems = z.array(cartItem).max(100)

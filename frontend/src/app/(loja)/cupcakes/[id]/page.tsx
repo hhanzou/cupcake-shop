@@ -3,7 +3,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
-import { AddToCartButton } from "@/components/cart/add-to-cart-button"
+import { ProductPurchase } from "@/components/cart/product-purchase"
 import { Badge } from "@/components/ui/badge"
 import { ApiWakeScreen } from "@/components/layout/api-wake-screen"
 import { ApiError, isApiAsleep } from "@/lib/api"
@@ -83,7 +83,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           <p className="w-fit rounded-full bg-butter px-5 py-2 font-heading text-2xl font-semibold shadow-soft">
             {formatPrice(product.price)}
           </p>
-          <AddToCartButton product={product} className="w-full sm:w-fit" />
+          <ProductPurchase product={product} />
         </div>
       </div>
     </div>

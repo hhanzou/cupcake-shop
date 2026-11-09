@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatPrice, toApiPrice } from './money'
+import { formatPrice, multiplyPrice, toApiPrice } from './money'
 
 describe('formatPrice', () => {
   it('formata em reais', () => {
@@ -19,5 +19,14 @@ describe('toApiPrice', () => {
     expect(toApiPrice('abc')).toBeNull()
     expect(toApiPrice('1,234')).toBeNull()
     expect(toApiPrice('-5')).toBeNull()
+  })
+})
+
+describe('multiplyPrice', () => {
+  it('multiplica em centavos, sem erro de arredondamento', () => {
+    expect(multiplyPrice('0.10', 3)).toBe('0.30')
+    expect(multiplyPrice('12.50', 2)).toBe('25.00')
+    expect(multiplyPrice('19.99', 99)).toBe('1979.01')
+    expect(multiplyPrice('5.00', 1)).toBe('5.00')
   })
 })

@@ -3,10 +3,11 @@
 import { useFormContext } from "react-hook-form"
 import { Button } from "@/components/ui/button"
 import { FULFILLMENT_LABEL } from "@/lib/labels"
-import { formatPrice } from "@/lib/money"
+import { formatPrice, multiplyPrice } from "@/lib/money"
 import { formatDate } from "@/lib/schedule"
 import { STORE } from "@/lib/store"
 import type { CartPreview } from "@/lib/types"
+import { useCart } from "@/stores/cart"
 import type { CheckoutValues } from "@/components/checkout/checkout-schema"
 
 export function StepPayment({
@@ -21,6 +22,9 @@ export function StepPayment({
   const { getValues } = useFormContext<CheckoutValues>()
   const values = getValues()
   const a = values.address
+  // As linhas (com observações) vêm do carrinho; preços unitários e total, da API.
+  const lines = useCart((s) => s.items)
+  const unitPrices = new Map(preview?.items.map((i) => [i.productId, i.unitPrice]))
 
   return (
     <div className="flex flex-col gap-5">
@@ -29,14 +33,22 @@ export function StepPayment({
           Resumo do pedido
         </h2>
         <ul className="divide-y divide-secondary">
-          {preview?.items.map((item) => (
-            <li key={item.productId} className="flex justify-between gap-3 py-2">
-              <span>
-                {item.quantity} × {item.name}
-              </span>
-              <span className="font-semibold">{formatPrice(item.lineTotal)}</span>
-            </li>
-          ))}
+          {preview &&
+            lines.map((line) => {
+              const unitPrice = unitPrices.get(line.productId)
+              const notes = line.notes.trim()
+              return (
+                <li key={line.id} className="flex justify-between gap-3 py-2">
+                  <span>
+                    {line.quantity} × {line.name}
+                    {notes && <span className="block text-sm text-muted-foreground">Obs.: {notes}</span>}
+                  </span>
+                  {unitPrice && (
+                    <span className="font-semibold">{formatPrice(multiplyPrice(unitPrice, line.quantity))}</span>
+                  )}
+                </li>
+              )
+            })}
         </ul>
         <p className="mt-3 flex items-baseline justify-between border-t border-secondary pt-3">
           <span>Total</span>

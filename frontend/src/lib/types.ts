@@ -23,12 +23,13 @@ export type Product = {
 
 export type Paginated<T> = { data: T[]; page: number; limit: number; total: number }
 
-export type CartItemInput = { productId: string; quantity: number }
+export type CartItemInput = { productId: string; quantity: number; notes?: string }
 
 export type PricedItem = {
   productId: string
   name: string
   quantity: number
+  notes: string | null
   unitPrice: string
   lineTotal: string
 }

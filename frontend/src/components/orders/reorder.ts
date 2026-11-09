@@ -17,7 +17,7 @@ export function addItemsToCart(items: PricedItem[], catalog: Map<string, Product
       continue
     }
     const result = useCart.getState().add(
-      { productId: product.id, name: product.name, imageUrl: product.imageUrl },
+      { productId: product.id, name: product.name, imageUrl: product.imageUrl, notes: item.notes ?? undefined },
       item.quantity,
     )
     if (result === "full") skipped++

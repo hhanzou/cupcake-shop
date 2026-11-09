@@ -32,6 +32,7 @@ describe('cart preview', () => {
       productId: a.id,
       name: 'A',
       quantity: 2,
+      notes: null,
       unitPrice: '12.50',
       lineTotal: '25.00',
     })

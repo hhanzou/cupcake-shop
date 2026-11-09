@@ -13,7 +13,7 @@ export function OrderThumbs({ items, catalog }: { items: PricedItem[]; catalog: 
     <div className="flex items-center" role="img" aria-label={`Cupcakes do pedido: ${items.map((i) => `${i.quantity} ${i.name}`).join(", ")}`}>
       {shown.map((item, i) => (
         <span
-          key={item.productId}
+          key={`${item.productId}-${i}`}
           className="relative -ml-3 size-14 overflow-hidden rounded-full border-2 border-card bg-secondary first:ml-0"
           style={{ zIndex: MAX - i }}
         >

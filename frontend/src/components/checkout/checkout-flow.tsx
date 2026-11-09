@@ -22,7 +22,7 @@ import { ApiError } from "@/lib/api"
 import { getFieldDetails } from "@/lib/form-errors"
 import { previewCart } from "@/lib/services/cart"
 import { createOrder } from "@/lib/services/orders"
-import { useCart } from "@/stores/cart"
+import { previewKey, toOrderItems, toPriceItems, useCart } from "@/stores/cart"
 import { useSession } from "@/stores/session"
 
 const PAYMENT_DELAY_MS = 2000
@@ -45,10 +45,9 @@ export function CheckoutFlow() {
   })
 
   // Mesma chave do carrinho: reaproveita o cache do SWR.
-  const key = items.length ? ["cart-preview", items.map((i) => `${i.productId}:${i.quantity}`).join(",")] : null
   const { data: preview, error: previewError, mutate } = useSWR(
-    key,
-    () => previewCart(items.map(({ productId, quantity }) => ({ productId, quantity }))),
+    previewKey(items),
+    () => previewCart(toPriceItems(items)),
     { keepPreviousData: true, revalidateOnFocus: false },
   )
 
@@ -88,7 +87,7 @@ export function CheckoutFlow() {
       const order = await createOrder({
         fulfillmentType: values.fulfillmentType,
         scheduledDate: values.scheduledDate,
-        items: useCart.getState().items.map(({ productId, quantity }) => ({ productId, quantity })),
+        items: toOrderItems(useCart.getState().items),
         // Em retirada o campo `address` não é enviado, nem vazio.
         ...(values.fulfillmentType === "DELIVERY" && {
           address: {

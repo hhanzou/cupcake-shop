@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { isUF } from "@/lib/states"
 import { getAvailableDates } from "@/lib/schedule"
 
 export const ADDRESS_FIELDS = ["street", "number", "complement", "district", "city", "state", "zipCode"] as const
@@ -37,8 +38,8 @@ export const checkoutSchema = z
     for (const [field, message] of required) {
       if (!a[field].trim()) ctx.addIssue({ code: "custom", path: ["address", field], message })
     }
-    if (!/^[A-Za-z]{2}$/.test(a.state.trim())) {
-      ctx.addIssue({ code: "custom", path: ["address", "state"], message: "Use a sigla com 2 letras (ex.: SP)" })
+    if (!isUF(a.state.trim().toUpperCase())) {
+      ctx.addIssue({ code: "custom", path: ["address", "state"], message: "Escolha o estado" })
     }
     if (a.zipCode.replace(/\D/g, "").length !== 8) {
       ctx.addIssue({ code: "custom", path: ["address", "zipCode"], message: "O CEP precisa ter 8 dígitos" })

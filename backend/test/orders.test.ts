@@ -146,6 +146,29 @@ describe('orders', () => {
       expect(await db().order.count()).toBe(0)
     })
 
+    it('UF inexistente dá 400 de validação, e sigla minúscula é normalizada', async () => {
+      const p = await createProduct()
+      const base = {
+        items: [{ productId: p.id, quantity: 1 }],
+        fulfillmentType: 'DELIVERY',
+        scheduledDate: validDate(),
+      }
+
+      for (const state of ['XX', 'São Paulo', 'S', '']) {
+        const res = await post({ ...base, address: { ...address, state } })
+        expect(res.statusCode).toBe(400)
+        expect(res.json().error.code).toBe('VALIDATION_ERROR')
+        expect(res.json().error.details).toContainEqual(
+          expect.objectContaining({ path: 'address.state' }),
+        )
+      }
+      expect(await db().order.count()).toBe(0)
+
+      const ok = await post({ ...base, address: { ...address, state: ' rj ' } })
+      expect(ok.statusCode).toBe(201)
+      expect(ok.json().address.state).toBe('RJ')
+    })
+
     it('retirada com endereço dá 400', async () => {
       const p = await createProduct()
       const res = await post(pickup([{ productId: p.id, quantity: 1 }], { address }))

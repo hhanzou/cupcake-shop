@@ -5,10 +5,12 @@ import { ptBR } from "react-day-picker/locale"
 import { Field } from "@/components/auth/field"
 import { Calendar } from "@/components/ui/calendar"
 import { Input } from "@/components/ui/input"
+import { NativeSelect } from "@/components/ui/native-select"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { FULFILLMENT_LABEL } from "@/lib/labels"
 import { getAvailableDates, isoToLocalDate, localDateToIso } from "@/lib/schedule"
 import { STORE } from "@/lib/store"
+import { UFS } from "@/lib/states"
 import type { CheckoutValues } from "@/components/checkout/checkout-schema"
 
 export function StepDelivery() {
@@ -121,7 +123,20 @@ export function StepDelivery() {
           </div>
           <div className="grid gap-4 sm:grid-cols-[120px_1fr]">
             <Field id="address-state" label="UF" error={addressErrors?.state?.message}>
-              {addressInput("state", { maxLength: 2, autoComplete: "address-level1", placeholder: "SP" })}
+              <NativeSelect
+                id="address-state"
+                autoComplete="address-level1"
+                aria-invalid={addressErrors?.state ? true : undefined}
+                aria-describedby={addressErrors?.state ? "address-state-error" : undefined}
+                {...register("address.state")}
+              >
+                <option value="">UF</option>
+                {UFS.map((uf) => (
+                  <option key={uf} value={uf}>
+                    {uf}
+                  </option>
+                ))}
+              </NativeSelect>
             </Field>
             <Field id="address-zipCode" label="CEP" error={addressErrors?.zipCode?.message}>
               {addressInput("zipCode", { inputMode: "numeric", autoComplete: "postal-code", placeholder: "00000-000" })}

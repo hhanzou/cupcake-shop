@@ -9,13 +9,27 @@ export const cartItems = z.array(cartItem).max(100)
 
 const text = z.string().trim().max(200).optional()
 
+/** Siglas das 26 unidades federativas e do Distrito Federal. */
+export const UFS = [
+  'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO',
+  'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI',
+  'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO',
+] as const
+
+const uf = z
+  .string()
+  .trim()
+  .toUpperCase()
+  .pipe(z.enum(UFS, 'UF inválida: use a sigla do estado, como SP'))
+  .optional()
+
 export const addressInput = z.object({
   street: text,
   number: text,
   complement: text,
   district: text,
   city: text,
-  state: text,
+  state: uf,
   zipCode: text,
 })
 

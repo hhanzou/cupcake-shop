@@ -2,7 +2,7 @@
 
 Loja de cupcakes completa: API REST em Node 22, Fastify 5, Prisma 6 e PostgreSQL 17 (em Docker, pasta `backend/`) e front-end em Next.js, TypeScript, Tailwind CSS e shadcn/ui (pasta `frontend/`).
 
-A documentação de projeto está em [docs/plano-backend.md](docs/plano-backend.md) (regras de negócio, modelo de dados e endpoints).
+A documentação do projeto (histórias de usuário, backlog, regras de negócio e resultados) está em [docs/projeto-de-intervencao.md](docs/projeto-de-intervencao.md).
 
 ## Como rodar o backend
 

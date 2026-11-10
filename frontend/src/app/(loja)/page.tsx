@@ -1,7 +1,10 @@
 import type { Metadata } from "next"
 import { CupcakeIllustration } from "@/components/illustrations/cupcake"
 import { EmptyCatalog } from "@/components/catalog/empty-catalog"
+import { ActiveFilters } from "@/components/catalog/active-filters"
 import { CatalogFilters } from "@/components/catalog/catalog-filters"
+import { CatalogResults } from "@/components/catalog/catalog-results"
+import { CatalogStateProvider } from "@/components/catalog/catalog-state"
 import { Pagination } from "@/components/catalog/pagination"
 import { ProductCard } from "@/components/catalog/product-card"
 import { ApiWakeScreen } from "@/components/layout/api-wake-screen"
@@ -74,30 +77,35 @@ export default async function Home({
         <span aria-hidden="true" className="animate-twinkle absolute top-1/2 right-1/3 size-2 rounded-full bg-butter [animation-delay:1.8s]" />
       </section>
 
-      <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
-        <CatalogFilters categories={categories.data} flavors={flavors} />
-        <div>
-          {products.data.length === 0 ? (
-            <EmptyCatalog />
-          ) : (
-            <>
-              <p className="mb-3 text-sm text-muted-foreground" aria-live="polite">
-                {products.total} {products.total === 1 ? "cupcake encontrado" : "cupcakes encontrados"}
-              </p>
-              <ul className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                {products.data.map((product, i) => (
-                  <li key={product.id} className="stagger flex" style={{ ["--i" as string]: i }}>
-                    <div className="flex w-full flex-col">
-                      <ProductCard product={product} />
-                    </div>
-                  </li>
-                ))}
-              </ul>
-              <Pagination params={params} total={products.total} limit={LIMIT} />
-            </>
-          )}
+      <CatalogStateProvider>
+        <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
+          <CatalogFilters categories={categories.data} flavors={flavors} />
+          <div>
+            <ActiveFilters categories={categories.data} />
+            <CatalogResults>
+              {products.data.length === 0 ? (
+                <EmptyCatalog />
+              ) : (
+                <>
+                  <p className="mb-3 text-sm text-muted-foreground" aria-live="polite">
+                    {products.total} {products.total === 1 ? "cupcake encontrado" : "cupcakes encontrados"}
+                  </p>
+                  <ul className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                    {products.data.map((product, i) => (
+                      <li key={product.id} className="stagger flex" style={{ ["--i" as string]: i }}>
+                        <div className="flex w-full flex-col">
+                          <ProductCard product={product} />
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                  <Pagination page={params.page} total={products.total} limit={LIMIT} />
+                </>
+              )}
+            </CatalogResults>
+          </div>
         </div>
-      </div>
+      </CatalogStateProvider>
     </div>
   )
 }

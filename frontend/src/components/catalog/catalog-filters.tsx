@@ -1,13 +1,13 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { SlidersHorizontal } from "lucide-react"
+import { LoaderCircle, SlidersHorizontal } from "lucide-react"
+import { FILTER_KEYS, useCatalogState } from "@/components/catalog/catalog-state"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { NativeSelect } from "@/components/ui/native-select"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { toApiPrice } from "@/lib/money"
 import type { Category } from "@/lib/types"
 
@@ -16,39 +16,45 @@ type Props = {
   flavors: string[]
 }
 
+/** "12.50" (URL) -> "12,50" (campo). */
+const toInput = (value: string | undefined) => (value ? value.replace(".", ",") : "")
+
+/**
+ * Mantém um campo de texto em sincronia com a URL sem atrapalhar a digitação:
+ * só sobrescreve o que o usuário digitou quando a URL muda por fora (voltar, limpar, chip).
+ */
+function useSyncedField(urlValue: string) {
+  const [value, setValue] = useState(urlValue)
+  const [lastUrlValue, setLastUrlValue] = useState(urlValue)
+  if (urlValue !== lastUrlValue) {
+    setLastUrlValue(urlValue)
+    setValue(urlValue)
+  }
+  return [value, setValue] as const
+}
+
 function FiltersForm({ categories, flavors, idPrefix }: Props & { idPrefix: string }) {
-  const router = useRouter()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
+  const { params, navigate } = useCatalogState()
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const [q, setQ] = useState(searchParams.get("q") ?? "")
-  const [minPrice, setMinPrice] = useState(searchParams.get("minPrice") ?? "")
-  const [maxPrice, setMaxPrice] = useState(searchParams.get("maxPrice") ?? "")
+  const [q, setQ] = useSyncedField(params.q ?? "")
+  const [minPrice, setMinPrice] = useSyncedField(toInput(params.minPrice))
+  const [maxPrice, setMaxPrice] = useSyncedField(toInput(params.maxPrice))
   const [priceError, setPriceError] = useState<string | null>(null)
 
   useEffect(
     () => () => {
       if (timer.current) clearTimeout(timer.current)
     },
-    []
+    [],
   )
-
-  function update(changes: Record<string, string | null>) {
-    const next = new URLSearchParams(window.location.search)
-    for (const [key, value] of Object.entries(changes)) {
-      if (value) next.set(key, value)
-      else next.delete(key)
-    }
-    next.delete("page")
-    const qs = next.toString()
-    router.push(qs ? `${pathname}?${qs}` : pathname)
-  }
 
   function onSearch(value: string) {
     setQ(value)
     if (timer.current) clearTimeout(timer.current)
-    timer.current = setTimeout(() => update({ q: value.trim() || null }), 300)
+    timer.current = setTimeout(() => {
+      if (value.trim() !== (params.q ?? "")) navigate({ q: value.trim() || undefined })
+    }, 300)
   }
 
   function applyPrices() {
@@ -58,11 +64,15 @@ function FiltersForm({ categories, flavors, idPrefix }: Props & { idPrefix: stri
       setPriceError("Use valores como 12,50")
       return
     }
+    if (min && max && Number(min) > Number(max)) {
+      setPriceError("O mínimo não pode ser maior que o máximo")
+      return
+    }
     setPriceError(null)
-    update({ minPrice: min, maxPrice: max })
+    if ((min ?? undefined) !== params.minPrice || (max ?? undefined) !== params.maxPrice) {
+      navigate({ minPrice: min ?? undefined, maxPrice: max ?? undefined })
+    }
   }
-
-  const hasFilters = ["q", "flavor", "category", "minPrice", "maxPrice", "sort"].some((k) => searchParams.has(k))
 
   return (
     <div className="flex flex-col gap-4">
@@ -81,8 +91,8 @@ function FiltersForm({ categories, flavors, idPrefix }: Props & { idPrefix: stri
         <Label htmlFor={`${idPrefix}-category`}>Categoria</Label>
         <NativeSelect
           id={`${idPrefix}-category`}
-          value={searchParams.get("category") ?? ""}
-          onChange={(e) => update({ category: e.target.value || null })}
+          value={params.category ?? ""}
+          onChange={(e) => navigate({ category: e.target.value || undefined })}
         >
           <option value="">Todas</option>
           {categories.map((c) => (
@@ -97,8 +107,8 @@ function FiltersForm({ categories, flavors, idPrefix }: Props & { idPrefix: stri
         <Label htmlFor={`${idPrefix}-flavor`}>Sabor</Label>
         <NativeSelect
           id={`${idPrefix}-flavor`}
-          value={searchParams.get("flavor") ?? ""}
-          onChange={(e) => update({ flavor: e.target.value || null })}
+          value={params.flavor ?? ""}
+          onChange={(e) => navigate({ flavor: e.target.value || undefined })}
         >
           <option value="">Todos</option>
           {flavors.map((f) => (
@@ -133,10 +143,12 @@ function FiltersForm({ categories, flavors, idPrefix }: Props & { idPrefix: stri
             onKeyDown={(e) => e.key === "Enter" && applyPrices()}
           />
         </div>
-        {priceError && (
+        {priceError ? (
           <p role="alert" className="text-sm text-destructive">
             {priceError}
           </p>
+        ) : (
+          <p className="text-xs text-muted-foreground">Aplica ao sair do campo ou com Enter.</p>
         )}
       </fieldset>
 
@@ -144,44 +156,43 @@ function FiltersForm({ categories, flavors, idPrefix }: Props & { idPrefix: stri
         <Label htmlFor={`${idPrefix}-sort`}>Ordenar por</Label>
         <NativeSelect
           id={`${idPrefix}-sort`}
-          value={searchParams.get("sort") ?? ""}
-          onChange={(e) => update({ sort: e.target.value || null })}
+          value={params.sort ?? ""}
+          onChange={(e) => navigate({ sort: e.target.value || undefined })}
         >
           <option value="">Mais recentes</option>
           <option value="price_asc">Menor preço</option>
           <option value="price_desc">Maior preço</option>
         </NativeSelect>
       </div>
-
-      {hasFilters && (
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={() => {
-            setQ("")
-            setMinPrice("")
-            setMaxPrice("")
-            router.push(pathname)
-          }}
-        >
-          Limpar filtros
-        </Button>
-      )}
     </div>
   )
 }
 
+function PendingIcon() {
+  const { isPending } = useCatalogState()
+  if (!isPending) return null
+  return <LoaderCircle className="size-4 animate-spin text-primary" aria-label="Atualizando" />
+}
+
 export function CatalogFilters(props: Props) {
-  const searchParams = useSearchParams()
-  // A chave refaz o formulário quando a URL muda por fora (botão voltar, limpar).
-  const key = searchParams.toString()
+  const { params, clear } = useCatalogState()
+  const activeCount = FILTER_KEYS.filter((k) => params[k]).length - (params.minPrice && params.maxPrice ? 1 : 0)
 
   return (
     <>
       <aside className="hidden lg:block">
         <div className="sticky top-4 rounded-3xl border border-secondary bg-card p-5 shadow-soft">
-          <h2 className="mb-4 text-lg font-semibold">Filtros</h2>
-          <FiltersForm key={key} {...props} idPrefix="desk" />
+          <div className="mb-4 flex items-center justify-between gap-2">
+            <h2 className="flex items-center gap-2 text-lg font-semibold">
+              Filtros <PendingIcon />
+            </h2>
+            {activeCount > 0 && (
+              <Button type="button" variant="ghost" size="sm" onClick={clear}>
+                Limpar
+              </Button>
+            )}
+          </div>
+          <FiltersForm {...props} idPrefix="desk" />
         </div>
       </aside>
 
@@ -190,12 +201,27 @@ export function CatalogFilters(props: Props) {
           <SheetTrigger render={<Button variant="secondary" />}>
             <SlidersHorizontal aria-hidden="true" />
             Filtros
+            {activeCount > 0 && (
+              <span className="ml-0.5 inline-flex size-5 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                {activeCount}
+              </span>
+            )}
           </SheetTrigger>
           <SheetContent side="left" className="overflow-y-auto p-5">
             <SheetHeader className="p-0">
-              <SheetTitle>Filtros</SheetTitle>
+              <SheetTitle className="flex items-center gap-2">
+                Filtros <PendingIcon />
+              </SheetTitle>
             </SheetHeader>
-            <FiltersForm key={key} {...props} idPrefix="mob" />
+            <FiltersForm {...props} idPrefix="mob" />
+            <div className="mt-2 flex gap-2">
+              {activeCount > 0 && (
+                <Button type="button" variant="secondary" className="flex-1" onClick={clear}>
+                  Limpar
+                </Button>
+              )}
+              <SheetClose render={<Button className="flex-1" />}>Ver cupcakes</SheetClose>
+            </div>
           </SheetContent>
         </Sheet>
       </div>

@@ -39,14 +39,3 @@ export function parseCatalogParams(raw: RawParams): CatalogParams {
     page: page >= 1 ? page : 1,
   }
 }
-
-/** Monta a query string (sem "?") com os filtros ativos. `page` 1 é omitido. */
-export function buildCatalogQuery(params: Partial<CatalogParams>): string {
-  const search = new URLSearchParams()
-  const { page, ...filters } = params
-  for (const [key, value] of Object.entries(filters)) {
-    if (value) search.set(key, String(value))
-  }
-  if (page && page > 1) search.set('page', String(page))
-  return search.toString()
-}

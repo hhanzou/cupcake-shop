@@ -2,6 +2,8 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { buildApp } from '../src/app'
 import { authHeader, createUser, db, resetDb } from './helpers'
 
+const STRONG = 'Senha@12345'
+
 describe('auth', () => {
   let app: Awaited<ReturnType<typeof buildApp>>
 
@@ -18,7 +20,7 @@ describe('auth', () => {
     app.inject({ method: 'POST', url: '/auth/register', payload })
 
   it('cadastra um usuário e devolve token', async () => {
-    const res = await register({ name: 'Ana', email: 'Ana@Teste.com', password: 'senha12345' })
+    const res = await register({ name: 'Ana', email: 'Ana@Teste.com', password: STRONG })
     expect(res.statusCode).toBe(201)
     const body = res.json()
     expect(body.token).toBeTruthy()
@@ -27,8 +29,8 @@ describe('auth', () => {
   })
 
   it('recusa e-mail repetido (inclusive com maiúsculas)', async () => {
-    await register({ name: 'Ana', email: 'ana@teste.com', password: 'senha12345' })
-    const res = await register({ name: 'Outra', email: 'ANA@teste.com', password: 'senha12345' })
+    await register({ name: 'Ana', email: 'ana@teste.com', password: STRONG })
+    const res = await register({ name: 'Outra', email: 'ANA@teste.com', password: STRONG })
     expect(res.statusCode).toBe(409)
     expect(res.json().error.code).toBe('EMAIL_IN_USE')
   })
@@ -37,15 +39,64 @@ describe('auth', () => {
     const short = await register({ name: 'Ana', email: 'ana@teste.com', password: '1234567' })
     expect(short.statusCode).toBe(400)
     expect(short.json().error.code).toBe('VALIDATION_ERROR')
-    const bad = await register({ name: 'Ana', email: 'nao-e-email', password: 'senha12345' })
+    const bad = await register({ name: 'Ana', email: 'nao-e-email', password: STRONG })
     expect(bad.statusCode).toBe(400)
+  })
+
+  describe('senha forte no cadastro', () => {
+    const passwordErrors = async (password: string) => {
+      const res = await register({ name: 'Ana', email: 'ana@teste.com', password })
+      expect(res.statusCode).toBe(400)
+      expect(res.json().error.code).toBe('VALIDATION_ERROR')
+      return (res.json().error.details as { path: string; message: string }[])
+        .filter((d) => d.path === 'password')
+        .map((d) => d.message)
+    }
+
+    it.each([
+      ['sem maiúscula', 'senha@12345', 'maiúscula'],
+      ['sem minúscula', 'SENHA@12345', 'minúscula'],
+      ['sem número', 'Senha@abcde', 'número'],
+      ['sem caractere especial', 'Senha12345', 'caractere especial'],
+      ['com menos de 8 caracteres', 'Se@1', '8 caracteres'],
+    ])('recusa senha %s', async (_case, password, expected) => {
+      const messages = await passwordErrors(password)
+      expect(messages).toHaveLength(1)
+      expect(messages[0]).toContain(expected)
+      expect(await db().user.count()).toBe(0)
+    })
+
+    it('devolve todas as regras que faltam de uma vez', async () => {
+      const messages = await passwordErrors('abc')
+      expect(messages).toHaveLength(4) // tamanho, maiúscula, número e especial
+    })
+
+    it('espaço não conta como caractere especial', async () => {
+      const messages = await passwordErrors('Senha 12345')
+      expect(messages).toEqual([expect.stringContaining('caractere especial')])
+    })
+
+    it('aceita letras acentuadas e qualquer símbolo como especial', async () => {
+      const res = await register({ name: 'Ana', email: 'ana@teste.com', password: 'Ébano#2026çã' })
+      expect(res.statusCode).toBe(201)
+    })
+
+    it('o login não aplica as regras (contas antigas continuam entrando)', async () => {
+      const { password } = await createUser(app, { email: 'antiga@teste.com', password: 'senha12345' })
+      const res = await app.inject({
+        method: 'POST',
+        url: '/auth/login',
+        payload: { email: 'antiga@teste.com', password },
+      })
+      expect(res.statusCode).toBe(200)
+    })
   })
 
   it('ignora role: "ADMIN" no cadastro', async () => {
     const res = await register({
       name: 'Hacker',
       email: 'h@teste.com',
-      password: 'senha12345',
+      password: STRONG,
       role: 'ADMIN',
     })
     expect(res.statusCode).toBe(201)

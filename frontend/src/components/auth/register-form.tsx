@@ -1,21 +1,27 @@
 "use client"
 
 import { useState } from "react"
-import { useForm } from "react-hook-form"
+import { useForm, useWatch } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { Field } from "@/components/auth/field"
+import { PasswordChecklist } from "@/components/auth/password-checklist"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ApiError } from "@/lib/api"
 import { applyFieldErrors } from "@/lib/form-errors"
+import { isStrongPassword, PASSWORD_MAX } from "@/lib/password"
 import { register as registerUser } from "@/lib/services/auth"
 import { useSession } from "@/stores/session"
 
 const schema = z.object({
   name: z.string().trim().min(1, "Informe seu nome").max(120, "Nome muito longo"),
   email: z.string().trim().min(1, "Informe seu e-mail").email("E-mail inválido"),
-  password: z.string().min(8, "A senha precisa ter ao menos 8 caracteres").max(72, "A senha pode ter no máximo 72 caracteres"),
+  password: z
+    .string()
+    .min(1, "Crie uma senha")
+    .max(PASSWORD_MAX, `A senha pode ter no máximo ${PASSWORD_MAX} caracteres`)
+    .refine(isStrongPassword, "A senha ainda não cumpre todas as exigências"),
 })
 type Values = z.infer<typeof schema>
 
@@ -25,8 +31,10 @@ export function RegisterForm({ onSuccess }: { onSuccess: () => void }) {
     register,
     handleSubmit,
     setError,
+    control,
     formState: { errors, isSubmitting },
-  } = useForm<Values>({ resolver: zodResolver(schema) })
+  } = useForm<Values>({ resolver: zodResolver(schema), defaultValues: { name: "", email: "", password: "" } })
+  const password = useWatch({ control, name: "password" })
 
   async function onSubmit(values: Values) {
     setFormError(null)
@@ -64,16 +72,17 @@ export function RegisterForm({ onSuccess }: { onSuccess: () => void }) {
           {...register("email")}
         />
       </Field>
-      <Field id="register-password" label="Senha" error={errors.password?.message} hint="De 8 a 72 caracteres">
+      <Field id="register-password" label="Senha" error={errors.password?.message}>
         <Input
           id="register-password"
           type="password"
           autoComplete="new-password"
           aria-invalid={errors.password ? true : undefined}
-          aria-describedby={errors.password ? "register-password-error" : undefined}
+          aria-describedby={errors.password ? "register-password-rules register-password-error" : "register-password-rules"}
           {...register("password")}
         />
       </Field>
+      <PasswordChecklist id="register-password-rules" password={password} />
       {formError && (
         <p role="alert" className="rounded-2xl bg-destructive/10 px-4 py-2 text-sm text-destructive">
           {formError}
